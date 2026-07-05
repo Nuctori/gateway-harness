@@ -39,6 +39,10 @@ jobs:
 
       - run: ./dist/gateway-harness replay-policy-conformance fixtures/newapi/responses-policy-apply.conformance.json responses.before_upstream
 
+      - run: ./dist/gateway-harness validate-conformance fixtures/newapi/responses-compact-ledger-sentinel.conformance.json
+
+      - run: ./dist/gateway-harness replay-policy-conformance fixtures/newapi/responses-compact-ledger-sentinel.conformance.json responses.compact.before_upstream
+
       - run: ./dist/gateway-harness conformance-schema > /tmp/gateway-harness.conformance.schema.json
 
       - run: ./dist/gateway-harness validate-ledger fixtures/newapi/project-session.ledger.json
