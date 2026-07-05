@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Nuctori/gateway-harness/main/schema/gateway-harness.ledger.schema.json",
+  "title": "Gateway Harness Project Session Ledger",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "projects": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/project"
+      }
+    }
+  },
+  "required": ["projects"],
+  "$defs": {
+    "stringMap": {
+      "type": "object",
+      "propertyNames": {
+        "not": {
+          "pattern": "^([Cc][Oo][Nn][Tt][Ee][Nn][Tt]|[Ii][Nn][Pp][Uu][Tt]|[Mm][Ee][Ss][Ss][Aa][Gg][Ee]|[Mm][Ee][Ss][Ss][Aa][Gg][Ee][Ss]|[Oo][Uu][Tt][Pp][Uu][Tt]|[Pp][Rr][Oo][Mm][Pp][Tt]|[Rr][Aa][Ww]_[Cc][Oo][Nn][Tt][Ee][Nn][Tt]|[Rr][Aa][Ww]_[Ii][Nn][Pp][Uu][Tt]|[Rr][Aa][Ww]_[Oo][Uu][Tt][Pp][Uu][Tt]|[Rr][Aa][Ww]_[Pp][Rr][Oo][Mm][Pp][Tt]|[Rr][Aa][Ww]_[Rr][Ee][Ss][Pp][Oo][Nn][Ss][Ee]|[Rr][Ee][Ss][Pp][Oo][Nn][Ss][Ee])$"
+        }
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "tags": {
+          "$ref": "#/$defs/tags"
+        },
+        "sessions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/session"
+          }
+        }
+      },
+      "required": ["id", "sessions"]
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string"
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "tags": {
+          "$ref": "#/$defs/tags"
+        },
+        "events": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/event"
+          }
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifact"
+          }
+        }
+      },
+      "required": ["id", "started_at", "events"]
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "enum": ["request", "response", "tool_call", "compact", "failover", "harness_action", "error"]
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "request_shape": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "hook": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "policy_version": {
+          "type": "string"
+        },
+        "trace_hash": {
+          "type": "string"
+        },
+        "error_code": {
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/$defs/stringMap"
+        }
+      },
+      "required": ["id", "type", "at"]
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "enum": ["compact_summary", "trace", "request_hash", "response_hash"]
+        },
+        "content_hash": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ref": {
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/$defs/stringMap"
+        }
+      },
+      "required": ["id", "type", "content_hash"]
+    }
+  }
+}

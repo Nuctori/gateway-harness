@@ -7,9 +7,11 @@ Gateway Harness releases are independent from NewAPI releases.
 - Policy structs and validation.
 - Adapter capability structs and validation.
 - Conformance fixture validation.
+- Project/session ledger validation.
 - JSON Schema for editor and WebUI integration.
 - CLI commands: `validate`, `explain`, `schema`, `validate-adapter`, `explain-adapter`, `adapter-schema`,
-  `validate-conformance`, `explain-conformance`, `replay-conformance`, and `conformance-schema`.
+  `validate-conformance`, `explain-conformance`, `replay-conformance`, `conformance-schema`,
+  `validate-ledger`, `explain-ledger`, and `ledger-schema`.
 - NewAPI example policy and adapter contract documentation.
 - Cross-compiled CLI artifacts for Linux amd64, Linux arm64, Linux armv7, and Windows amd64.
 
@@ -17,6 +19,7 @@ Gateway Harness releases are independent from NewAPI releases.
 
 - Shipping a patched NewAPI binary or Docker image from this repository.
 - Storing or replaying model conversation state.
+- Storing raw prompt or response content in the ledger contract.
 - Hidden gateway context-window enforcement.
 - Executing arbitrary scripts from policies.
 
@@ -29,4 +32,4 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-The release workflow uploads CLI binaries, the policy schema, and checksums.
+The release workflow uploads CLI binaries, schemas, and checksums.

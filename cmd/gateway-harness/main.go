@@ -9,6 +9,7 @@ import (
 
 	"github.com/Nuctori/gateway-harness/adapter"
 	"github.com/Nuctori/gateway-harness/conformance"
+	"github.com/Nuctori/gateway-harness/ledger"
 	"github.com/Nuctori/gateway-harness/policy"
 	"github.com/Nuctori/gateway-harness/schema"
 )
@@ -70,6 +71,30 @@ func main() {
 		fmt.Print(schema.AdapterJSON)
 	case "conformance-schema":
 		fmt.Print(schema.ConformanceJSON)
+	case "validate-ledger":
+		if len(os.Args) != 3 {
+			usage()
+			os.Exit(2)
+		}
+		l := mustLoadLedger(os.Args[2])
+		if err := ledger.Validate(l); err != nil {
+			fmt.Fprintf(os.Stderr, "invalid ledger: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("ledger ok")
+	case "explain-ledger":
+		if len(os.Args) != 3 {
+			usage()
+			os.Exit(2)
+		}
+		l := mustLoadLedger(os.Args[2])
+		if err := ledger.Validate(l); err != nil {
+			fmt.Fprintf(os.Stderr, "invalid ledger: %v\n", err)
+			os.Exit(1)
+		}
+		printLedgerSummary(l)
+	case "ledger-schema":
+		fmt.Print(schema.LedgerJSON)
 	case "validate-conformance":
 		if len(os.Args) != 3 {
 			usage()
@@ -123,7 +148,10 @@ Usage:
   gateway-harness validate-conformance <fixture.json>
   gateway-harness explain-conformance <fixture.json>
   gateway-harness replay-conformance <fixture.json>
-  gateway-harness conformance-schema`)
+  gateway-harness conformance-schema
+  gateway-harness validate-ledger <ledger.json>
+  gateway-harness explain-ledger <ledger.json>
+  gateway-harness ledger-schema`)
 }
 
 func mustLoadPolicy(path string) policy.Policy {
@@ -172,6 +200,22 @@ func mustLoadConformanceFixture(path string) conformance.Fixture {
 		os.Exit(1)
 	}
 	return f
+}
+
+func mustLoadLedger(path string) ledger.Ledger {
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "open ledger: %v\n", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	l, err := ledger.Decode(file)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "decode ledger: %v\n", err)
+		os.Exit(1)
+	}
+	return l
 }
 
 func printSummary(p policy.Policy) {
@@ -227,4 +271,21 @@ func printReplayResult(result conformance.ReplayResult) {
 	}
 	encoded, _ := json.MarshalIndent(data, "", "  ")
 	fmt.Println(string(encoded))
+}
+
+func printLedgerSummary(l ledger.Ledger) {
+	summary := ledger.Summarize(l)
+	data := map[string]any{
+		"projects":  summary.Projects,
+		"sessions":  summary.Sessions,
+		"events":    summary.Events,
+		"artifacts": summary.Artifacts,
+	}
+	encoded, _ := json.MarshalIndent(data, "", "  ")
+	fmt.Println(string(encoded))
+	for _, project := range l.Projects {
+		for _, session := range project.Sessions {
+			fmt.Printf("- %s/%s events=%d artifacts=%d tags=%s\n", project.ID, session.ID, len(session.Events), len(session.Artifacts), strings.Join(session.Tags, ","))
+		}
+	}
 }

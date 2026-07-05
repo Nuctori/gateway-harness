@@ -53,3 +53,25 @@ Adapters should emit redacted traces that include:
 - action count
 - added estimated tokens
 - content hashes, not raw injected content
+
+## Ledger
+
+A ledger records project and session history for audit and later review.
+
+Ledger entries should include event metadata, content hashes, and references to external artifacts.
+They should not embed raw user prompts, raw model responses, or hidden summaries.
+Metadata is for labels and IDs; obvious raw-content keys such as `prompt`, `response`, and
+`messages` are rejected by the ledger validator.
+
+Typical event types:
+
+- `request`
+- `response`
+- `tool_call`
+- `compact`
+- `failover`
+- `harness_action`
+- `error`
+
+Summarizers, stores, and indexes should live in sidecars or adapters. Gateway Harness core only
+defines the transparent contract they can validate against.

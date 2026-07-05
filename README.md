@@ -15,6 +15,7 @@ It defines:
 - **Trace**: redacted audit metadata for debugging without leaking prompt content.
 - **Adapter**: host-specific glue for a gateway such as NewAPI.
 - **Adapter Capability**: an explicit manifest for supported hooks, actions, request shapes, and guards.
+- **Ledger**: project/session/event audit records that reference hashes and external artifacts instead of raw prompt content.
 
 NewAPI is treated as an adapter example, not as the owner of the Gateway Harness concept.
 
@@ -62,9 +63,31 @@ Print the conformance fixture schema:
 gateway-harness conformance-schema
 ```
 
+Validate a project/session audit ledger:
+
+```bash
+gateway-harness validate-ledger fixtures/newapi/project-session.ledger.json
+```
+
+Explain a ledger:
+
+```bash
+gateway-harness explain-ledger fixtures/newapi/project-session.ledger.json
+```
+
+Print the ledger schema:
+
+```bash
+gateway-harness ledger-schema
+```
+
 Conformance fixtures validate Gateway Harness contracts, adapter capabilities, and realistic request
 shapes. `replay-conformance` posts the fixture request to a local fake upstream to exercise the HTTP
 path without network access or model calls. It does not replace live upstream tests.
+
+Ledger files validate the audit boundary for project/session history. They intentionally store event
+metadata, content hashes, and artifact references, not raw prompts or raw model outputs. Metadata is
+for labels and IDs; obvious raw-content keys such as `prompt`, `response`, and `messages` are rejected.
 
 ## Project Layout
 
@@ -72,6 +95,7 @@ path without network access or model calls. It does not replace live upstream te
 cmd/gateway-harness/      CLI entrypoint
 adapter/                  Adapter capability manifest structs and validation
 conformance/              Protocol fixture validation
+ledger/                   Project/session audit ledger validation
 policy/                   Policy structs, validation, summaries
 schema/                   JSON Schema for editors and WebUI
 docs/                     Concepts and adapter contracts
@@ -87,6 +111,7 @@ The main project should publish:
 - `gateway-harness.policy.schema.json`.
 - `gateway-harness.adapter.schema.json`.
 - `gateway-harness.conformance.schema.json`.
+- `gateway-harness.ledger.schema.json`.
 - Checksums.
 - Example policies.
 

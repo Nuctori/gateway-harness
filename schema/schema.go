@@ -10,3 +10,6 @@ var AdapterJSON string
 
 //go:embed gateway-harness.conformance.schema.json
 var ConformanceJSON string
+
+//go:embed gateway-harness.ledger.schema.json
+var LedgerJSON string

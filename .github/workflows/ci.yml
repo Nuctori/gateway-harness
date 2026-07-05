@@ -32,3 +32,9 @@ jobs:
       - run: ./dist/gateway-harness replay-conformance fixtures/newapi/responses-tool-chain.conformance.json
 
       - run: ./dist/gateway-harness conformance-schema > /tmp/gateway-harness.conformance.schema.json
+
+      - run: ./dist/gateway-harness validate-ledger fixtures/newapi/project-session.ledger.json
+
+      - run: ./dist/gateway-harness explain-ledger fixtures/newapi/project-session.ledger.json
+
+      - run: ./dist/gateway-harness ledger-schema > /tmp/gateway-harness.ledger.schema.json
