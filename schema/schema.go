@@ -16,3 +16,6 @@ var LedgerJSON string
 
 //go:embed gateway-harness.steward.schema.json
 var StewardJSON string
+
+//go:embed gateway-harness.steward-proposal.schema.json
+var StewardProposalJSON string

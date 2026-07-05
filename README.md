@@ -100,6 +100,24 @@ Print the steward schema:
 gateway-harness steward-schema
 ```
 
+Validate an AI steward proposal against its spec:
+
+```bash
+gateway-harness validate-steward-proposal fixtures/newapi/compact-context.steward.json fixtures/newapi/compact-context.steward-proposal.json
+```
+
+Explain a steward proposal:
+
+```bash
+gateway-harness explain-steward-proposal fixtures/newapi/compact-context.steward.json fixtures/newapi/compact-context.steward-proposal.json
+```
+
+Print the steward proposal schema:
+
+```bash
+gateway-harness steward-proposal-schema
+```
+
 Conformance fixtures validate Gateway Harness contracts, adapter capabilities, and realistic request
 shapes. `replay-conformance` posts the fixture request to a local fake upstream to exercise the HTTP
 path without network access or model calls. It does not replace live upstream tests.
@@ -112,6 +130,10 @@ Steward specs validate AI-in-the-loop context management. A steward can be confi
 failover, or diagnostic hooks, but it must use explicit hooks, redacted inputs, structured outputs,
 validated actions, and artifact hashes. Gateway Harness core does not call a steward unless an adapter
 implements that explicit sidecar behavior.
+
+Steward proposals validate what an AI steward actually returned. A proposal is checked against the
+spec that enabled it, so an AI cannot use a disabled hook, emit an unlisted action, write an artifact
+without a hash, or silently apply a policy patch.
 
 ## Project Layout
 
@@ -138,6 +160,7 @@ The main project should publish:
 - `gateway-harness.conformance.schema.json`.
 - `gateway-harness.ledger.schema.json`.
 - `gateway-harness.steward.schema.json`.
+- `gateway-harness.steward-proposal.schema.json`.
 - Checksums.
 - Example policies.
 

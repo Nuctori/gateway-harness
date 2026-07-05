@@ -99,3 +99,17 @@ Required safety boundaries:
 - output actions must be validated before application
 - policy patch proposals require human approval
 - artifacts must be referenced by hash
+
+## Steward Proposal
+
+A steward proposal is the structured output returned by a steward.
+
+It must be validated against the steward spec that enabled it. This cross-check prevents an AI from
+using a disabled hook, emitting an action that was not allowed, creating an artifact without a hash,
+or turning a policy suggestion into an implicit runtime change.
+
+Proposal outputs are action-shaped records, not free-form transcripts. For example:
+
+- `context.inject` must include role, position, and text.
+- `ledger.artifact.create` must include artifact type, content hash, and reference.
+- `policy.patch.propose` must include patch hash, reference, and description.

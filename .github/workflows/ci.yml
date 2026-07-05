@@ -44,3 +44,9 @@ jobs:
       - run: ./dist/gateway-harness explain-steward fixtures/newapi/compact-context.steward.json
 
       - run: ./dist/gateway-harness steward-schema > /tmp/gateway-harness.steward.schema.json
+
+      - run: ./dist/gateway-harness validate-steward-proposal fixtures/newapi/compact-context.steward.json fixtures/newapi/compact-context.steward-proposal.json
+
+      - run: ./dist/gateway-harness explain-steward-proposal fixtures/newapi/compact-context.steward.json fixtures/newapi/compact-context.steward-proposal.json
+
+      - run: ./dist/gateway-harness steward-proposal-schema > /tmp/gateway-harness.steward-proposal.schema.json

@@ -155,11 +155,31 @@ gateway-harness explain-steward fixtures/newapi/compact-context.steward.json
 gateway-harness steward-schema
 ```
 
+用 steward spec 验证 AI 返回的 proposal：
+
+```bash
+gateway-harness validate-steward-proposal fixtures/newapi/compact-context.steward.json fixtures/newapi/compact-context.steward-proposal.json
+```
+
+解释 steward proposal：
+
+```bash
+gateway-harness explain-steward-proposal fixtures/newapi/compact-context.steward.json fixtures/newapi/compact-context.steward-proposal.json
+```
+
+打印 steward proposal schema：
+
+```bash
+gateway-harness steward-proposal-schema
+```
+
 Conformance fixture 验证的是 Gateway Harness 契约、adapter capability 和真实请求形态。`replay-conformance` 会把 fixture request 通过 HTTP POST 发到本地 fake upstream，不触网、不调用真实模型；它仍不替代 live upstream 端到端测试。
 
 Ledger 验证的是“项目/会话/事件/摘要 artifact”这层审计边界。它不保存原始对话内容，只保存事件元数据、`content_hash` 和外部引用，方便后续接 sidecar、SQLite、对象存储或向量索引。Metadata 只适合放标签和 ID；`prompt`、`response`、`messages` 这类明显承载原文的 key 会被拒绝。
 
 Steward 验证的是“AI 可以参与上下文管理”的显式边界。它可以声明在 compact、failover 或诊断 hook 上唤起 AI，但必须使用显式 hook、脱敏输入、结构化输出、可校验 action 和带 hash 的 artifact。Gateway Harness core 不会因为存在 steward schema 就默认调用 AI；实际调用必须由 adapter 或 sidecar 明确实现。
+
+Steward proposal 验证的是“AI 实际返回了什么”。Proposal 必须拿对应 spec 一起校验，因此 AI 不能使用未启用的 hook、不能输出未允许的 action、不能创建没有 hash 的 artifact，也不能静默应用 policy patch。
 
 ## 示例 policy
 
@@ -778,6 +798,7 @@ Gateway Harness 需要避免让无意义变化破坏缓存：
 - 用户自然语言可以先生成 steward 或 policy 草案，但必须经过 schema validation 和人工确认。
 - compact hook 可以唤起 steward 分析卡点，但输入应是 redacted trace、ledger metadata、artifact refs、session tags 和 user goal。
 - steward 不能直接写任意 prompt，只能输出 `context.inject`、`ledger.artifact.create`、`policy.patch.propose` 等允许的结构化 action。
+- steward proposal 必须再与 steward spec 交叉验证，未声明的 hook/action 一律不能执行。
 - `policy.patch.propose` 必须要求 `human_approval_for_policy_patch`，避免 AI 静默改线上策略。
 - `ledger.artifact.create` 必须要求 `artifact_hash_required`，避免把原始会话内容塞进网关日志。
 
@@ -826,6 +847,7 @@ Gateway Harness 独立发布。
 - `gateway-harness.conformance.schema.json`。
 - `gateway-harness.ledger.schema.json`。
 - `gateway-harness.steward.schema.json`。
+- `gateway-harness.steward-proposal.schema.json`。
 - checksums。
 - 示例 policy。
 

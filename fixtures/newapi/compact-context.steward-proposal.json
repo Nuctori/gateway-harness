@@ -1,0 +1,29 @@
+{
+  "version": "0.1",
+  "id": "proposal_compact_context_1",
+  "steward": "newapi-compact-context-steward",
+  "hook": "responses.compact.before_upstream",
+  "outputs": [
+    {
+      "action": "ledger.artifact.create",
+      "reason": "store compact summary as an external artifact reference",
+      "artifact_type": "compact_summary",
+      "content_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "ref": "memory://summaries/session_codex_context_harness/compact_steward_1"
+    },
+    {
+      "action": "context.inject",
+      "reason": "inject compact-time working memory produced by the explicit steward",
+      "role": "system",
+      "position": "after_existing_system",
+      "text": "Continue preserving the user's active goal, current blockers, verified decisions, and unresolved follow-ups from the compact summary artifact."
+    },
+    {
+      "action": "policy.patch.propose",
+      "reason": "propose a reviewed policy update instead of silently changing runtime behavior",
+      "patch_hash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "ref": "git://proposals/context-steward-policy.patch",
+      "description": "Add compact-time context stewarding for coding sessions after human review."
+    }
+  ]
+}

@@ -64,6 +64,99 @@ func TestValidateRejectsArtifactActionWithoutArtifactTypes(t *testing.T) {
 	}
 }
 
+func TestValidateProposalAcceptsCompactContextProposal(t *testing.T) {
+	s, err := Decode(strings.NewReader(compactStewardJSON))
+	if err != nil {
+		t.Fatalf("decode spec: %v", err)
+	}
+	p, err := DecodeProposal(strings.NewReader(compactStewardProposalJSON))
+	if err != nil {
+		t.Fatalf("decode proposal: %v", err)
+	}
+	if err := ValidateProposal(s, p); err != nil {
+		t.Fatalf("validate proposal: %v", err)
+	}
+	summary := SummarizeProposal(p)
+	if summary.ID != "proposal_compact_context_1" || summary.Outputs != 3 {
+		t.Fatalf("unexpected proposal summary: %+v", summary)
+	}
+}
+
+func TestValidateProposalRejectsNotAllowedAction(t *testing.T) {
+	s, err := Decode(strings.NewReader(compactStewardJSON))
+	if err != nil {
+		t.Fatalf("decode spec: %v", err)
+	}
+	raw := strings.Replace(compactStewardProposalJSON, `"context.inject"`, `"diagnosis.note.create"`, 1)
+	p, err := DecodeProposal(strings.NewReader(raw))
+	if err != nil {
+		t.Fatalf("decode proposal: %v", err)
+	}
+	if err := ValidateProposal(s, p); err == nil {
+		t.Fatal("expected action not allowed error")
+	}
+}
+
+func TestValidateProposalRejectsWrongHook(t *testing.T) {
+	s, err := Decode(strings.NewReader(compactStewardJSON))
+	if err != nil {
+		t.Fatalf("decode spec: %v", err)
+	}
+	raw := strings.Replace(compactStewardProposalJSON, `"responses.compact.before_upstream"`, `"responses.before_upstream"`, 1)
+	p, err := DecodeProposal(strings.NewReader(raw))
+	if err != nil {
+		t.Fatalf("decode proposal: %v", err)
+	}
+	if err := ValidateProposal(s, p); err == nil {
+		t.Fatal("expected hook not enabled error")
+	}
+}
+
+func TestValidateProposalRejectsMissingArtifactHash(t *testing.T) {
+	s, err := Decode(strings.NewReader(compactStewardJSON))
+	if err != nil {
+		t.Fatalf("decode spec: %v", err)
+	}
+	raw := strings.Replace(compactStewardProposalJSON, `"content_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",`, ``, 1)
+	p, err := DecodeProposal(strings.NewReader(raw))
+	if err != nil {
+		t.Fatalf("decode proposal: %v", err)
+	}
+	if err := ValidateProposal(s, p); err == nil {
+		t.Fatal("expected missing artifact hash error")
+	}
+}
+
+func TestValidateProposalRejectsIrrelevantActionField(t *testing.T) {
+	s, err := Decode(strings.NewReader(compactStewardJSON))
+	if err != nil {
+		t.Fatalf("decode spec: %v", err)
+	}
+	raw := strings.Replace(compactStewardProposalJSON, `"artifact_type": "compact_summary",`, `"artifact_type": "compact_summary", "text": "raw hidden side channel",`, 1)
+	p, err := DecodeProposal(strings.NewReader(raw))
+	if err != nil {
+		t.Fatalf("decode proposal: %v", err)
+	}
+	if err := ValidateProposal(s, p); err == nil {
+		t.Fatal("expected irrelevant field error")
+	}
+}
+
+func TestValidateProposalRejectsIrrelevantContextInjectField(t *testing.T) {
+	s, err := Decode(strings.NewReader(compactStewardJSON))
+	if err != nil {
+		t.Fatalf("decode spec: %v", err)
+	}
+	raw := strings.Replace(compactStewardProposalJSON, `"role": "system",`, `"role": "system", "preserve_roles": ["system"],`, 1)
+	p, err := DecodeProposal(strings.NewReader(raw))
+	if err != nil {
+		t.Fatalf("decode proposal: %v", err)
+	}
+	if err := ValidateProposal(s, p); err == nil {
+		t.Fatal("expected irrelevant context.inject field error")
+	}
+}
+
 const compactStewardJSON = `{
   "version": "0.1",
   "name": "newapi-compact-context-steward",
@@ -73,4 +166,34 @@ const compactStewardJSON = `{
   "allowed_actions": ["context.inject", "ledger.artifact.create", "policy.patch.propose"],
   "artifact_types": ["compact_summary"],
   "required_guards": ["explicit_invocation_only", "structured_output_only", "validate_output_actions", "redacted_input_only", "artifact_hash_required", "human_approval_for_policy_patch"]
+}`
+
+const compactStewardProposalJSON = `{
+  "version": "0.1",
+  "id": "proposal_compact_context_1",
+  "steward": "newapi-compact-context-steward",
+  "hook": "responses.compact.before_upstream",
+  "outputs": [
+    {
+      "action": "ledger.artifact.create",
+      "reason": "store compact summary as an external artifact reference",
+      "artifact_type": "compact_summary",
+      "content_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "ref": "memory://summaries/session_codex_context_harness/compact_steward_1"
+    },
+    {
+      "action": "context.inject",
+      "reason": "inject compact-time working memory produced by the explicit steward",
+      "role": "system",
+      "position": "after_existing_system",
+      "text": "Continue preserving the user's active goal, current blockers, verified decisions, and unresolved follow-ups from the compact summary artifact."
+    },
+    {
+      "action": "policy.patch.propose",
+      "reason": "propose a reviewed policy update instead of silently changing runtime behavior",
+      "patch_hash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "ref": "git://proposals/context-steward-policy.patch",
+      "description": "Add compact-time context stewarding for coding sessions after human review."
+    }
+  ]
 }`

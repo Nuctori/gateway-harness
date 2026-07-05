@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Nuctori/gateway-harness/main/schema/gateway-harness.steward-proposal.schema.json",
+  "title": "Gateway Harness AI Steward Proposal",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "steward": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hook": {
+      "$ref": "gateway-harness.steward.schema.json#/$defs/explicitHook"
+    },
+    "outputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/output"
+      }
+    }
+  },
+  "required": ["id", "steward", "hook", "outputs"],
+  "$defs": {
+    "output": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/contextInjectOutput"
+        },
+        {
+          "$ref": "#/$defs/contextTruncateOutput"
+        },
+        {
+          "$ref": "#/$defs/ledgerArtifactOutput"
+        },
+        {
+          "$ref": "#/$defs/policyPatchOutput"
+        },
+        {
+          "$ref": "#/$defs/diagnosisNoteOutput"
+        },
+        {
+          "$ref": "#/$defs/sessionTagsOutput"
+        }
+      ]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "hash": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contextInjectOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "context.inject"
+        },
+        "reason": {
+          "$ref": "#/$defs/reason"
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "position": {
+          "type": "string",
+          "enum": ["after_existing_system", "before_messages"]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["action", "role", "position", "text"]
+    },
+    "contextTruncateOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "context.truncate"
+        },
+        "reason": {
+          "$ref": "#/$defs/reason"
+        },
+        "strategy": {
+          "type": "string"
+        },
+        "keep_last_messages": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "preserve_roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": ["action"]
+    },
+    "ledgerArtifactOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "ledger.artifact.create"
+        },
+        "reason": {
+          "$ref": "#/$defs/reason"
+        },
+        "artifact_type": {
+          "$ref": "gateway-harness.ledger.schema.json#/$defs/artifact/properties/type"
+        },
+        "content_hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "ref": {
+          "$ref": "#/$defs/ref"
+        }
+      },
+      "required": ["action", "artifact_type", "content_hash", "ref"]
+    },
+    "policyPatchOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "policy.patch.propose"
+        },
+        "reason": {
+          "$ref": "#/$defs/reason"
+        },
+        "patch_hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "ref": {
+          "$ref": "#/$defs/ref"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["action", "patch_hash", "ref", "description"]
+    },
+    "diagnosisNoteOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "diagnosis.note.create"
+        },
+        "reason": {
+          "$ref": "#/$defs/reason"
+        },
+        "note_hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "ref": {
+          "$ref": "#/$defs/ref"
+        },
+        "severity": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["action", "note_hash", "ref", "severity"]
+    },
+    "sessionTagsOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "session.tags.update"
+        },
+        "reason": {
+          "$ref": "#/$defs/reason"
+        },
+        "tags": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": ["action", "tags"]
+    }
+  }
+}

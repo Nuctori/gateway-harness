@@ -120,6 +120,32 @@ func main() {
 		printStewardSummary(s)
 	case "steward-schema":
 		fmt.Print(schema.StewardJSON)
+	case "validate-steward-proposal":
+		if len(os.Args) != 4 {
+			usage()
+			os.Exit(2)
+		}
+		s := mustLoadStewardSpec(os.Args[2])
+		p := mustLoadStewardProposal(os.Args[3])
+		if err := steward.ValidateProposal(s, p); err != nil {
+			fmt.Fprintf(os.Stderr, "invalid steward proposal: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("steward proposal ok")
+	case "explain-steward-proposal":
+		if len(os.Args) != 4 {
+			usage()
+			os.Exit(2)
+		}
+		s := mustLoadStewardSpec(os.Args[2])
+		p := mustLoadStewardProposal(os.Args[3])
+		if err := steward.ValidateProposal(s, p); err != nil {
+			fmt.Fprintf(os.Stderr, "invalid steward proposal: %v\n", err)
+			os.Exit(1)
+		}
+		printStewardProposalSummary(p)
+	case "steward-proposal-schema":
+		fmt.Print(schema.StewardProposalJSON)
 	case "validate-conformance":
 		if len(os.Args) != 3 {
 			usage()
@@ -179,7 +205,10 @@ Usage:
   gateway-harness ledger-schema
   gateway-harness validate-steward <steward.json>
   gateway-harness explain-steward <steward.json>
-  gateway-harness steward-schema`)
+  gateway-harness steward-schema
+  gateway-harness validate-steward-proposal <steward.json> <proposal.json>
+  gateway-harness explain-steward-proposal <steward.json> <proposal.json>
+  gateway-harness steward-proposal-schema`)
 }
 
 func mustLoadPolicy(path string) policy.Policy {
@@ -260,6 +289,22 @@ func mustLoadStewardSpec(path string) steward.Spec {
 		os.Exit(1)
 	}
 	return s
+}
+
+func mustLoadStewardProposal(path string) steward.Proposal {
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "open steward proposal: %v\n", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	p, err := steward.DecodeProposal(file)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "decode steward proposal: %v\n", err)
+		os.Exit(1)
+	}
+	return p
 }
 
 func printSummary(p policy.Policy) {
@@ -347,4 +392,19 @@ func printStewardSummary(s steward.Spec) {
 	encoded, _ := json.MarshalIndent(data, "", "  ")
 	fmt.Println(string(encoded))
 	fmt.Printf("- %s model=%s hooks=%s actions=%s\n", s.Name, s.StewardModel, strings.Join(s.Hooks, ","), strings.Join(s.AllowedActions, ","))
+}
+
+func printStewardProposalSummary(p steward.Proposal) {
+	summary := steward.SummarizeProposal(p)
+	data := map[string]any{
+		"id":      summary.ID,
+		"steward": summary.Steward,
+		"hook":    summary.Hook,
+		"outputs": summary.Outputs,
+	}
+	encoded, _ := json.MarshalIndent(data, "", "  ")
+	fmt.Println(string(encoded))
+	for _, output := range p.Outputs {
+		fmt.Printf("- %s reason=%s\n", output.Action, output.Reason)
+	}
 }
