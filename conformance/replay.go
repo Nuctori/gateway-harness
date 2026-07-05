@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"time"
+
+	"github.com/Nuctori/gateway-harness/policy"
 )
 
 type ReplayResult struct {
@@ -16,6 +18,18 @@ type ReplayResult struct {
 	Path        string
 	StatusCode  int
 	RequestBody int
+}
+
+type PolicyReplayResult struct {
+	Name                string
+	Path                string
+	StatusCode          int
+	OriginalRequestBody int
+	AppliedRequestBody  int
+	Trace               policy.ApplyTrace
+	MatchedPrograms     []string
+	AppliedActions      []string
+	SkippedActions      []policy.Skipped
 }
 
 func ReplayFakeUpstream(ctx context.Context, f Fixture) (ReplayResult, error) {
@@ -86,6 +100,40 @@ func ReplayFakeUpstream(ctx context.Context, f Fixture) (ReplayResult, error) {
 	}, nil
 }
 
+func ReplayAppliedPolicyFakeUpstream(ctx context.Context, f Fixture, options policy.ApplyOptions) (PolicyReplayResult, error) {
+	if err := Validate(f); err != nil {
+		return PolicyReplayResult{}, err
+	}
+	if len(f.Request) == 0 {
+		return PolicyReplayResult{}, fmt.Errorf("fixture %q request is required for policy replay", f.Name)
+	}
+	applied, err := policy.Apply(f.Policy, f.Request, options)
+	if err != nil {
+		return PolicyReplayResult{}, err
+	}
+
+	path, err := requestShapePath(f.RequestShape)
+	if err != nil {
+		return PolicyReplayResult{}, err
+	}
+
+	statusCode, err := postFakeUpstream(ctx, path, f.RequestShape, applied.Request)
+	if err != nil {
+		return PolicyReplayResult{}, err
+	}
+	return PolicyReplayResult{
+		Name:                f.Name,
+		Path:                path,
+		StatusCode:          statusCode,
+		OriginalRequestBody: len(f.Request),
+		AppliedRequestBody:  len(applied.Request),
+		Trace:               applied.Trace,
+		MatchedPrograms:     applied.MatchedPrograms,
+		AppliedActions:      applied.AppliedActions,
+		SkippedActions:      applied.SkippedActions,
+	}, nil
+}
+
 func requestShapePath(shape string) (string, error) {
 	switch shape {
 	case "chat":
@@ -97,6 +145,56 @@ func requestShapePath(shape string) (string, error) {
 	default:
 		return "", fmt.Errorf("unsupported request_shape %q", shape)
 	}
+}
+
+func postFakeUpstream(ctx context.Context, path string, requestShape string, request []byte) (int, error) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method must be POST", http.StatusMethodNotAllowed)
+			return
+		}
+		if r.URL.Path != path {
+			http.Error(w, "unexpected path", http.StatusNotFound)
+			return
+		}
+		body, readErr := io.ReadAll(r.Body)
+		if readErr != nil {
+			http.Error(w, readErr.Error(), http.StatusBadRequest)
+			return
+		}
+		if err := validateRequestShape(requestShape, body); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if err := validateFakeUpstreamProtocol(requestShape, body); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	defer server.Close()
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, server.URL+path, bytes.NewReader(request))
+	if err != nil {
+		return 0, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return resp.StatusCode, fmt.Errorf("fake upstream returned %d: %s", resp.StatusCode, string(body))
+	}
+	return resp.StatusCode, nil
 }
 
 func validateFakeUpstreamProtocol(shape string, raw json.RawMessage) error {

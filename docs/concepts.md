@@ -73,6 +73,16 @@ Compact hooks are ordinary explicit hooks. A compaction-aware adapter may run
 Gateway Harness core does not silently summarize, truncate, or recover context that the client did
 not send.
 
+## Policy Apply Replay
+
+Adapters need a stronger check than dry-run: the applied request copy must still satisfy the host
+protocol shape. Policy apply replay applies a policy in memory, posts the applied request to a local
+fake upstream, and reports only request sizes plus redacted trace metadata.
+
+This is intentionally different from a command that prints the rewritten request. The applied
+request can contain raw injected text because adapters need to send it upstream, but CLI and logs
+should expose only trace operations, hashes, lengths, hooks, and status codes.
+
 ## Ledger
 
 A ledger records project and session history for audit and later review.

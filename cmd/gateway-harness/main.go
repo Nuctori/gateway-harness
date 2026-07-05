@@ -216,6 +216,27 @@ func main() {
 			os.Exit(1)
 		}
 		printReplayResult(result)
+	case "replay-policy-conformance":
+		if len(os.Args) != 4 && len(os.Args) != 5 {
+			usage()
+			os.Exit(2)
+		}
+		f := mustLoadConformanceFixture(os.Args[2])
+		options := policy.ApplyOptions{Hook: os.Args[3]}
+		if len(os.Args) == 5 {
+			estimatedTokens, err := strconv.Atoi(os.Args[4])
+			if err != nil || estimatedTokens < 0 {
+				fmt.Fprintf(os.Stderr, "estimated_tokens must be a non-negative integer\n")
+				os.Exit(2)
+			}
+			options.EstimatedTokens = estimatedTokens
+		}
+		result, err := conformance.ReplayAppliedPolicyFakeUpstream(context.Background(), f, options)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "policy conformance replay failed: %v\n", err)
+			os.Exit(1)
+		}
+		printPolicyReplayResult(result)
 	default:
 		usage()
 		os.Exit(2)
@@ -236,6 +257,7 @@ Usage:
   gateway-harness validate-conformance <fixture.json>
   gateway-harness explain-conformance <fixture.json>
   gateway-harness replay-conformance <fixture.json>
+  gateway-harness replay-policy-conformance <fixture.json> <hook> [estimated_tokens]
   gateway-harness conformance-schema
   gateway-harness validate-ledger <ledger.json>
   gateway-harness explain-ledger <ledger.json>
@@ -404,6 +426,22 @@ func printReplayResult(result conformance.ReplayResult) {
 		"path":         result.Path,
 		"status_code":  result.StatusCode,
 		"request_body": result.RequestBody,
+	}
+	encoded, _ := json.MarshalIndent(data, "", "  ")
+	fmt.Println(string(encoded))
+}
+
+func printPolicyReplayResult(result conformance.PolicyReplayResult) {
+	data := map[string]any{
+		"name":                  result.Name,
+		"path":                  result.Path,
+		"status_code":           result.StatusCode,
+		"original_request_body": result.OriginalRequestBody,
+		"applied_request_body":  result.AppliedRequestBody,
+		"matched_programs":      result.MatchedPrograms,
+		"applied_actions":       result.AppliedActions,
+		"skipped_actions":       result.SkippedActions,
+		"trace":                 result.Trace,
 	}
 	encoded, _ := json.MarshalIndent(data, "", "  ")
 	fmt.Println(string(encoded))

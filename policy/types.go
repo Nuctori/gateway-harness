@@ -1,5 +1,7 @@
 package policy
 
+import "encoding/json"
+
 type Policy struct {
 	Version  string    `json:"version,omitempty"`
 	Programs []Program `json:"programs"`
@@ -74,4 +76,43 @@ type Skipped struct {
 	Program string `json:"program"`
 	Action  string `json:"action"`
 	Reason  string `json:"reason"`
+}
+
+type ApplyOptions struct {
+	Hook            string
+	Model           string
+	EstimatedTokens int
+}
+
+type ApplyResult struct {
+	Hook            string          `json:"hook"`
+	Model           string          `json:"model"`
+	EstimatedTokens int             `json:"estimated_tokens,omitempty"`
+	MatchedPrograms []string        `json:"matched_programs,omitempty"`
+	AppliedActions  []string        `json:"applied_actions,omitempty"`
+	SkippedActions  []Skipped       `json:"skipped_actions,omitempty"`
+	Trace           ApplyTrace      `json:"trace"`
+	Request         json.RawMessage `json:"-"`
+}
+
+type ApplyTrace struct {
+	Operations []TraceOperation `json:"operations,omitempty"`
+	Summary    TraceSummary     `json:"summary"`
+}
+
+type TraceOperation struct {
+	Program      string `json:"program"`
+	Op           string `json:"op"`
+	Action       string `json:"action"`
+	Target       string `json:"target"`
+	InsertIndex  int    `json:"insert_index"`
+	Role         string `json:"role"`
+	ContentHash  string `json:"content_hash"`
+	ContentChars int    `json:"content_chars"`
+	Reason       string `json:"reason,omitempty"`
+}
+
+type TraceSummary struct {
+	Ops         int    `json:"ops"`
+	ContentMode string `json:"content_mode"`
 }

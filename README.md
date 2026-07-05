@@ -64,6 +64,13 @@ Replay a conformance fixture against a local fake upstream:
 gateway-harness replay-conformance fixtures/newapi/responses-tool-chain.conformance.json
 ```
 
+Apply a fixture policy, replay the applied request against a local fake upstream, and print only a
+redacted trace:
+
+```bash
+gateway-harness replay-policy-conformance fixtures/newapi/responses-policy-apply.conformance.json responses.before_upstream
+```
+
 Print the conformance fixture schema:
 
 ```bash
@@ -133,6 +140,11 @@ gateway-harness dry-run-steward-proposal fixtures/newapi/compact-context.steward
 Conformance fixtures validate Gateway Harness contracts, adapter capabilities, and realistic request
 shapes. `replay-conformance` posts the fixture request to a local fake upstream to exercise the HTTP
 path without network access or model calls. It does not replace live upstream tests.
+
+`replay-policy-conformance` goes one step further: it applies the fixture policy to a request copy,
+posts the applied request to the fake upstream, and prints only request sizes plus a redacted trace.
+It is the CI-safe path for proving an adapter-style mutation preserves protocol shape without
+leaking raw prompts or raw injected text.
 
 Ledger files validate the audit boundary for project/session history. They intentionally store event
 metadata, content hashes, and artifact references, not raw prompts or raw model outputs. Metadata is
