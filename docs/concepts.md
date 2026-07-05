@@ -75,3 +75,27 @@ Typical event types:
 
 Summarizers, stores, and indexes should live in sidecars or adapters. Gateway Harness core only
 defines the transparent contract they can validate against.
+
+## Steward
+
+A steward is an explicit AI-in-the-loop sidecar that can propose context-management changes at
+configured hooks.
+
+Stewards are for cases such as:
+
+- compact-time summaries
+- stuck-session diagnosis
+- failover context repair
+- policy patch proposals
+
+Stewards must not be implicit gateway behavior. A valid steward spec must declare explicit hooks, a
+steward model, redacted inputs, allowed output actions, artifact types, and required guards.
+
+Required safety boundaries:
+
+- no wildcard hooks
+- no raw transcript inputs
+- structured outputs only
+- output actions must be validated before application
+- policy patch proposals require human approval
+- artifacts must be referenced by hash

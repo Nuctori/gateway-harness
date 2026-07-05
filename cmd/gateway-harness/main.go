@@ -12,6 +12,7 @@ import (
 	"github.com/Nuctori/gateway-harness/ledger"
 	"github.com/Nuctori/gateway-harness/policy"
 	"github.com/Nuctori/gateway-harness/schema"
+	"github.com/Nuctori/gateway-harness/steward"
 )
 
 func main() {
@@ -95,6 +96,30 @@ func main() {
 		printLedgerSummary(l)
 	case "ledger-schema":
 		fmt.Print(schema.LedgerJSON)
+	case "validate-steward":
+		if len(os.Args) != 3 {
+			usage()
+			os.Exit(2)
+		}
+		s := mustLoadStewardSpec(os.Args[2])
+		if err := steward.Validate(s); err != nil {
+			fmt.Fprintf(os.Stderr, "invalid steward spec: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("steward spec ok")
+	case "explain-steward":
+		if len(os.Args) != 3 {
+			usage()
+			os.Exit(2)
+		}
+		s := mustLoadStewardSpec(os.Args[2])
+		if err := steward.Validate(s); err != nil {
+			fmt.Fprintf(os.Stderr, "invalid steward spec: %v\n", err)
+			os.Exit(1)
+		}
+		printStewardSummary(s)
+	case "steward-schema":
+		fmt.Print(schema.StewardJSON)
 	case "validate-conformance":
 		if len(os.Args) != 3 {
 			usage()
@@ -151,7 +176,10 @@ Usage:
   gateway-harness conformance-schema
   gateway-harness validate-ledger <ledger.json>
   gateway-harness explain-ledger <ledger.json>
-  gateway-harness ledger-schema`)
+  gateway-harness ledger-schema
+  gateway-harness validate-steward <steward.json>
+  gateway-harness explain-steward <steward.json>
+  gateway-harness steward-schema`)
 }
 
 func mustLoadPolicy(path string) policy.Policy {
@@ -216,6 +244,22 @@ func mustLoadLedger(path string) ledger.Ledger {
 		os.Exit(1)
 	}
 	return l
+}
+
+func mustLoadStewardSpec(path string) steward.Spec {
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "open steward spec: %v\n", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	s, err := steward.Decode(file)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "decode steward spec: %v\n", err)
+		os.Exit(1)
+	}
+	return s
 }
 
 func printSummary(p policy.Policy) {
@@ -288,4 +332,19 @@ func printLedgerSummary(l ledger.Ledger) {
 			fmt.Printf("- %s/%s events=%d artifacts=%d tags=%s\n", project.ID, session.ID, len(session.Events), len(session.Artifacts), strings.Join(session.Tags, ","))
 		}
 	}
+}
+
+func printStewardSummary(s steward.Spec) {
+	summary := steward.Summarize(s)
+	data := map[string]any{
+		"name":            summary.Name,
+		"hooks":           summary.Hooks,
+		"inputs":          summary.Inputs,
+		"allowed_actions": summary.AllowedActions,
+		"artifact_types":  summary.ArtifactTypes,
+		"required_guards": summary.RequiredGuards,
+	}
+	encoded, _ := json.MarshalIndent(data, "", "  ")
+	fmt.Println(string(encoded))
+	fmt.Printf("- %s model=%s hooks=%s actions=%s\n", s.Name, s.StewardModel, strings.Join(s.Hooks, ","), strings.Join(s.AllowedActions, ","))
 }

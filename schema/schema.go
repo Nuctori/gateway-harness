@@ -13,3 +13,6 @@ var ConformanceJSON string
 
 //go:embed gateway-harness.ledger.schema.json
 var LedgerJSON string
+
+//go:embed gateway-harness.steward.schema.json
+var StewardJSON string

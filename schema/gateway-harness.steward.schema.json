@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Nuctori/gateway-harness/main/schema/gateway-harness.steward.schema.json",
+  "title": "Gateway Harness AI Steward Spec",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "steward_model": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hooks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/explicitHook"
+      },
+      "uniqueItems": true
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/input"
+      },
+      "uniqueItems": true
+    },
+    "allowed_actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/outputAction"
+      },
+      "uniqueItems": true
+    },
+    "artifact_types": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/artifactType"
+      },
+      "uniqueItems": true
+    },
+    "required_guards": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "$ref": "#/$defs/guard"
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": ["name", "steward_model", "hooks", "inputs", "allowed_actions", "required_guards"],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "allowed_actions": {
+            "contains": {
+              "const": "ledger.artifact.create"
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "artifact_types": {
+            "minItems": 1
+          },
+          "required_guards": {
+            "contains": {
+              "const": "artifact_hash_required"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "artifact_types": {
+            "minItems": 1
+          }
+        },
+        "required": ["artifact_types"]
+      },
+      "then": {
+        "properties": {
+          "allowed_actions": {
+            "contains": {
+              "const": "ledger.artifact.create"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "allowed_actions": {
+            "contains": {
+              "const": "policy.patch.propose"
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "required_guards": {
+            "contains": {
+              "const": "human_approval_for_policy_patch"
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "required_guards": {
+          "allOf": [
+            {
+              "contains": {
+                "const": "explicit_invocation_only"
+              }
+            },
+            {
+              "contains": {
+                "const": "structured_output_only"
+              }
+            },
+            {
+              "contains": {
+                "const": "validate_output_actions"
+              }
+            },
+            {
+              "contains": {
+                "const": "redacted_input_only"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "explicitHook": {
+      "type": "string",
+      "enum": [
+        "request.before_model_mapping",
+        "request.before_upstream",
+        "chat.before_model_mapping",
+        "chat.before_upstream",
+        "responses.before_model_mapping",
+        "responses.before_upstream",
+        "responses.compact.before_model_mapping",
+        "responses.compact.before_upstream"
+      ]
+    },
+    "input": {
+      "type": "string",
+      "enum": [
+        "adapter_capability",
+        "artifact_refs",
+        "error_summary",
+        "ledger_event_metadata",
+        "policy_summary",
+        "redacted_trace",
+        "session_tags",
+        "user_goal"
+      ]
+    },
+    "outputAction": {
+      "type": "string",
+      "enum": [
+        "context.inject",
+        "context.truncate",
+        "diagnosis.note.create",
+        "ledger.artifact.create",
+        "policy.patch.propose",
+        "session.tags.update"
+      ]
+    },
+    "artifactType": {
+      "type": "string",
+      "enum": ["compact_summary", "trace", "request_hash", "response_hash"]
+    },
+    "guard": {
+      "type": "string",
+      "enum": [
+        "explicit_invocation_only",
+        "structured_output_only",
+        "validate_output_actions",
+        "redacted_input_only",
+        "artifact_hash_required",
+        "human_approval_for_policy_patch"
+      ]
+    }
+  }
+}

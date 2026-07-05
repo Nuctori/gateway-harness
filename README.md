@@ -16,6 +16,7 @@ It defines:
 - **Adapter**: host-specific glue for a gateway such as NewAPI.
 - **Adapter Capability**: an explicit manifest for supported hooks, actions, request shapes, and guards.
 - **Ledger**: project/session/event audit records that reference hashes and external artifacts instead of raw prompt content.
+- **Steward**: an explicit AI-in-the-loop sidecar contract for proposing validated context patches and audit artifacts.
 
 NewAPI is treated as an adapter example, not as the owner of the Gateway Harness concept.
 
@@ -81,6 +82,24 @@ Print the ledger schema:
 gateway-harness ledger-schema
 ```
 
+Validate an AI steward spec:
+
+```bash
+gateway-harness validate-steward fixtures/newapi/compact-context.steward.json
+```
+
+Explain a steward spec:
+
+```bash
+gateway-harness explain-steward fixtures/newapi/compact-context.steward.json
+```
+
+Print the steward schema:
+
+```bash
+gateway-harness steward-schema
+```
+
 Conformance fixtures validate Gateway Harness contracts, adapter capabilities, and realistic request
 shapes. `replay-conformance` posts the fixture request to a local fake upstream to exercise the HTTP
 path without network access or model calls. It does not replace live upstream tests.
@@ -89,6 +108,11 @@ Ledger files validate the audit boundary for project/session history. They inten
 metadata, content hashes, and artifact references, not raw prompts or raw model outputs. Metadata is
 for labels and IDs; obvious raw-content keys such as `prompt`, `response`, and `messages` are rejected.
 
+Steward specs validate AI-in-the-loop context management. A steward can be configured for compact,
+failover, or diagnostic hooks, but it must use explicit hooks, redacted inputs, structured outputs,
+validated actions, and artifact hashes. Gateway Harness core does not call a steward unless an adapter
+implements that explicit sidecar behavior.
+
 ## Project Layout
 
 ```text
@@ -96,6 +120,7 @@ cmd/gateway-harness/      CLI entrypoint
 adapter/                  Adapter capability manifest structs and validation
 conformance/              Protocol fixture validation
 ledger/                   Project/session audit ledger validation
+steward/                  AI-in-the-loop steward contract validation
 policy/                   Policy structs, validation, summaries
 schema/                   JSON Schema for editors and WebUI
 docs/                     Concepts and adapter contracts
@@ -112,6 +137,7 @@ The main project should publish:
 - `gateway-harness.adapter.schema.json`.
 - `gateway-harness.conformance.schema.json`.
 - `gateway-harness.ledger.schema.json`.
+- `gateway-harness.steward.schema.json`.
 - Checksums.
 - Example policies.
 

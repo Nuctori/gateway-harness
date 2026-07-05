@@ -8,10 +8,12 @@ Gateway Harness releases are independent from NewAPI releases.
 - Adapter capability structs and validation.
 - Conformance fixture validation.
 - Project/session ledger validation.
+- AI-in-the-loop steward spec validation.
 - JSON Schema for editor and WebUI integration.
 - CLI commands: `validate`, `explain`, `schema`, `validate-adapter`, `explain-adapter`, `adapter-schema`,
   `validate-conformance`, `explain-conformance`, `replay-conformance`, `conformance-schema`,
-  `validate-ledger`, `explain-ledger`, and `ledger-schema`.
+  `validate-ledger`, `explain-ledger`, `ledger-schema`, `validate-steward`, `explain-steward`,
+  and `steward-schema`.
 - NewAPI example policy and adapter contract documentation.
 - Cross-compiled CLI artifacts for Linux amd64, Linux arm64, Linux armv7, and Windows amd64.
 
@@ -22,6 +24,7 @@ Gateway Harness releases are independent from NewAPI releases.
 - Storing raw prompt or response content in the ledger contract.
 - Hidden gateway context-window enforcement.
 - Executing arbitrary scripts from policies.
+- Calling AI stewards implicitly without an explicit steward spec and adapter implementation.
 
 ## Tagging
 
