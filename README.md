@@ -50,6 +50,12 @@ Validate a conformance fixture:
 gateway-harness validate-conformance fixtures/newapi/responses-tool-chain.conformance.json
 ```
 
+Replay a conformance fixture against a local fake upstream:
+
+```bash
+gateway-harness replay-conformance fixtures/newapi/responses-tool-chain.conformance.json
+```
+
 Print the conformance fixture schema:
 
 ```bash
@@ -57,7 +63,8 @@ gateway-harness conformance-schema
 ```
 
 Conformance fixtures validate Gateway Harness contracts, adapter capabilities, and realistic request
-shapes. They do not replace end-to-end tests against a fake or live upstream server.
+shapes. `replay-conformance` posts the fixture request to a local fake upstream to exercise the HTTP
+path without network access or model calls. It does not replace live upstream tests.
 
 ## Project Layout
 

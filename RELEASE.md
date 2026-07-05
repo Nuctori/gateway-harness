@@ -9,7 +9,7 @@ Gateway Harness releases are independent from NewAPI releases.
 - Conformance fixture validation.
 - JSON Schema for editor and WebUI integration.
 - CLI commands: `validate`, `explain`, `schema`, `validate-adapter`, `explain-adapter`, `adapter-schema`,
-  `validate-conformance`, `explain-conformance`, and `conformance-schema`.
+  `validate-conformance`, `explain-conformance`, `replay-conformance`, and `conformance-schema`.
 - NewAPI example policy and adapter contract documentation.
 - Cross-compiled CLI artifacts for Linux amd64, Linux arm64, Linux armv7, and Windows amd64.
 

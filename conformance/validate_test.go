@@ -1,6 +1,7 @@
 package conformance
 
 import (
+	"context"
 	"strings"
 	"testing"
 )
@@ -33,6 +34,37 @@ func TestValidateRejectsUnsupportedPolicyHook(t *testing.T) {
 	}
 	if err := Validate(fixture); err == nil {
 		t.Fatal("expected unsupported policy hook error")
+	}
+}
+
+func TestReplayFakeUpstreamAcceptsResponsesToolChainFixture(t *testing.T) {
+	fixture, err := Decode(strings.NewReader(responsesToolChainFixtureJSON))
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	result, err := ReplayFakeUpstream(context.Background(), fixture)
+	if err != nil {
+		t.Fatalf("replay: %v", err)
+	}
+	if result.Path != "/v1/responses" || result.StatusCode != 200 || result.RequestBody == 0 {
+		t.Fatalf("unexpected replay result: %+v", result)
+	}
+}
+
+func TestReplayFakeUpstreamRejectsMissingItemReference(t *testing.T) {
+	fixture, err := Decode(strings.NewReader(responsesToolChainFixtureJSON))
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	fixture.Request = []byte(`{
+		"model": "gpt-5.4-mini",
+		"previous_response_id": "resp_1",
+		"input": [
+			{"type": "function_call_output", "call_id": "call_1", "output": "{\"ok\":true}"}
+		]
+	}`)
+	if _, err := ReplayFakeUpstream(context.Background(), fixture); err == nil {
+		t.Fatal("expected fake upstream replay to reject missing item_reference")
 	}
 }
 

@@ -29,4 +29,6 @@ jobs:
 
       - run: ./dist/gateway-harness validate-conformance fixtures/newapi/responses-tool-chain.conformance.json
 
+      - run: ./dist/gateway-harness replay-conformance fixtures/newapi/responses-tool-chain.conformance.json
+
       - run: ./dist/gateway-harness conformance-schema > /tmp/gateway-harness.conformance.schema.json

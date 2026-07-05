@@ -103,13 +103,19 @@ gateway-harness validate-adapter examples/newapi/adapter.capability.json
 gateway-harness validate-conformance fixtures/newapi/responses-tool-chain.conformance.json
 ```
 
+用本地 fake upstream 回放 conformance fixture：
+
+```bash
+gateway-harness replay-conformance fixtures/newapi/responses-tool-chain.conformance.json
+```
+
 打印 conformance fixture schema：
 
 ```bash
 gateway-harness conformance-schema
 ```
 
-Conformance fixture 验证的是 Gateway Harness 契约、adapter capability 和真实请求形态。它不是 fake upstream 或 live upstream 的端到端测试，后续可以在这个基础上继续加 HTTP fake server。
+Conformance fixture 验证的是 Gateway Harness 契约、adapter capability 和真实请求形态。`replay-conformance` 会把 fixture request 通过 HTTP POST 发到本地 fake upstream，不触网、不调用真实模型；它仍不替代 live upstream 端到端测试。
 
 ## 示例 policy
 
@@ -503,7 +509,7 @@ v0.1 CLI 先提供 validation；后续可以扩展 `gateway-harness test` 来执
 
 Gateway Harness 的 adapter 必须理解这些边界，宁愿跳过某些 action，也不要破坏上游协议。
 
-v0.2 起，contract conformance fixture 可以把这类真实请求形态固化进 CI，避免未来改 schema、adapter 或 WebUI 时不小心破坏协议边界。它验证契约和请求形态，不替代完整的上游 HTTP 端到端测试。
+v0.2 起，contract conformance fixture 可以把这类真实请求形态固化进 CI，避免未来改 schema、adapter 或 WebUI 时不小心破坏协议边界。配合 `replay-conformance`，CI 还能覆盖本地 fake upstream 的 HTTP 路径；它仍不替代 live upstream 端到端测试。
 
 ### 33. 面向组织的策略分层
 

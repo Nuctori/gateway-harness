@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -91,6 +92,18 @@ func main() {
 			os.Exit(1)
 		}
 		printConformanceSummary(f)
+	case "replay-conformance":
+		if len(os.Args) != 3 {
+			usage()
+			os.Exit(2)
+		}
+		f := mustLoadConformanceFixture(os.Args[2])
+		result, err := conformance.ReplayFakeUpstream(context.Background(), f)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "conformance replay failed: %v\n", err)
+			os.Exit(1)
+		}
+		printReplayResult(result)
 	default:
 		usage()
 		os.Exit(2)
@@ -109,6 +122,7 @@ Usage:
   gateway-harness adapter-schema
   gateway-harness validate-conformance <fixture.json>
   gateway-harness explain-conformance <fixture.json>
+  gateway-harness replay-conformance <fixture.json>
   gateway-harness conformance-schema`)
 }
 
@@ -199,6 +213,17 @@ func printConformanceSummary(f conformance.Fixture) {
 		"steps":           summary.Steps,
 		"actions":         summary.Actions,
 		"required_guards": summary.RequiredGuards,
+	}
+	encoded, _ := json.MarshalIndent(data, "", "  ")
+	fmt.Println(string(encoded))
+}
+
+func printReplayResult(result conformance.ReplayResult) {
+	data := map[string]any{
+		"name":         result.Name,
+		"path":         result.Path,
+		"status_code":  result.StatusCode,
+		"request_body": result.RequestBody,
 	}
 	encoded, _ := json.MarshalIndent(data, "", "  ")
 	fmt.Println(string(encoded))
