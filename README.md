@@ -1,5 +1,7 @@
 # Gateway Harness
 
+[中文 README](README.zh-CN.md)
+
 Gateway Harness is a small, host-agnostic policy layer for programmable LLM gateway context.
 
 It is intended to be released and versioned as its own project. Gateway integrations such as NewAPI
