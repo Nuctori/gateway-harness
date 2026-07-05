@@ -12,7 +12,6 @@ func TestValidateAcceptsNewAPIPolicy(t *testing.T) {
 			"name": "newapi-coding",
 			"models": ["*"],
 			"tags": ["domain:coding"],
-			"budget": {"max_patch_ops": 16, "max_added_tokens": 1200},
 			"steps": [{
 				"hook": "responses.compact.before_upstream",
 				"when": {"model_matches": "*"},
@@ -74,10 +73,46 @@ func TestValidateRejectsUnsupportedAction(t *testing.T) {
 	}
 }
 
-func TestEffectiveHooksDefaultsToBeforeUpstream(t *testing.T) {
+func TestEffectiveHooksRequiresExplicitHook(t *testing.T) {
 	hooks := EffectiveHooks(Step{})
-	if len(hooks) != 1 || hooks[0] != DefaultHook {
+	if len(hooks) != 0 {
 		t.Fatalf("unexpected hooks: %#v", hooks)
 	}
 }
 
+func TestValidateRejectsMissingHook(t *testing.T) {
+	p, err := Decode(strings.NewReader(`{
+		"programs": [{
+			"name": "bad",
+			"models": ["*"],
+			"steps": [{
+				"do": [{"action": "context.inject", "role": "system", "position": "after_existing_system", "text": "x"}]
+			}]
+		}]
+	}`))
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if err := Validate(p); err == nil {
+		t.Fatal("expected missing hook error")
+	}
+}
+
+func TestValidateRejectsImplicitInjectRoleAndPosition(t *testing.T) {
+	p, err := Decode(strings.NewReader(`{
+		"programs": [{
+			"name": "bad",
+			"models": ["*"],
+			"steps": [{
+				"hook": "request.before_upstream",
+				"do": [{"action": "context.inject", "text": "x"}]
+			}]
+		}]
+	}`))
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if err := Validate(p); err == nil {
+		t.Fatal("expected explicit inject role and position error")
+	}
+}

@@ -8,8 +8,6 @@ import (
 	"strings"
 )
 
-const DefaultHook = "request.before_upstream"
-
 var SupportedHooks = map[string]bool{
 	"*":                                      true,
 	"request.before_model_mapping":           true,
@@ -51,9 +49,6 @@ func Validate(p Policy) error {
 		if len(program.Steps) == 0 {
 			return fmt.Errorf("program %q needs at least one step", program.Name)
 		}
-		if program.Budget.MaxPatchOps < 0 || program.Budget.MaxAddedTokens < 0 || program.Budget.MaxContextTokens < 0 {
-			return fmt.Errorf("program %q has invalid negative budget", program.Name)
-		}
 		for j, step := range program.Steps {
 			if err := validateHooks(step); err != nil {
 				return fmt.Errorf("program %q step %d %w", program.Name, j, err)
@@ -75,7 +70,11 @@ func Validate(p Policy) error {
 }
 
 func validateHooks(step Step) error {
-	for _, hook := range EffectiveHooks(step) {
+	hooks := EffectiveHooks(step)
+	if len(hooks) == 0 {
+		return fmt.Errorf("needs explicit hook or hooks")
+	}
+	for _, hook := range hooks {
 		if !SupportedHooks[hook] {
 			return fmt.Errorf("unsupported hook %q", hook)
 		}
@@ -92,8 +91,14 @@ func validateAction(action Action) error {
 		if strings.TrimSpace(action.Text) == "" {
 			return fmt.Errorf("context.inject text is required")
 		}
+		if strings.TrimSpace(action.Role) == "" {
+			return fmt.Errorf("context.inject role is required")
+		}
+		if strings.TrimSpace(action.Position) == "" {
+			return fmt.Errorf("context.inject position is required")
+		}
 	case "context.truncate":
-		if action.KeepLastMessages < 0 || action.MaxEstimatedTokens < 0 {
+		if action.KeepLastMessages < 0 {
 			return fmt.Errorf("context.truncate limits must not be negative")
 		}
 	}
@@ -105,9 +110,6 @@ func EffectiveHooks(step Step) []string {
 	hooks = append(hooks, step.Hooks...)
 	if strings.TrimSpace(step.Hook) != "" {
 		hooks = append(hooks, step.Hook)
-	}
-	if len(hooks) == 0 {
-		hooks = append(hooks, DefaultHook)
 	}
 
 	seen := map[string]bool{}
@@ -141,4 +143,3 @@ func Summarize(p Policy) Summary {
 	sort.Strings(summary.Hooks)
 	return summary
 }
-

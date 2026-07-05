@@ -36,10 +36,12 @@ Current conditions:
 - `model_matches`
 - `estimated_tokens_gt`
 
-## Budget
+## Explicit Guards
 
-Budgets limit Gateway Harness changes only. A harness must not invent a hidden model context window
-or reject a request just because its own estimate is smaller than the upstream model capacity.
+Gateway Harness does not define implicit program-level budgets. If an adapter needs to limit or
+guard a mutation, that behavior should be represented by an explicit action or adapter guard. A
+harness must not invent a hidden model context window or reject a request just because its own
+estimate is smaller than the upstream model capacity.
 
 ## Trace
 
@@ -51,4 +53,3 @@ Adapters should emit redacted traces that include:
 - action count
 - added estimated tokens
 - content hashes, not raw injected content
-

@@ -9,14 +9,7 @@ type Program struct {
 	Name   string   `json:"name"`
 	Models []string `json:"models"`
 	Tags   []string `json:"tags,omitempty"`
-	Budget Budget   `json:"budget,omitempty"`
 	Steps  []Step   `json:"steps"`
-}
-
-type Budget struct {
-	MaxPatchOps      int `json:"max_patch_ops,omitempty"`
-	MaxAddedTokens   int `json:"max_added_tokens,omitempty"`
-	MaxContextTokens int `json:"max_context_tokens,omitempty"`
 }
 
 type Step struct {
@@ -32,15 +25,14 @@ type Condition struct {
 }
 
 type Action struct {
-	Action             string   `json:"action"`
-	Role               string   `json:"role,omitempty"`
-	Position           string   `json:"position,omitempty"`
-	Text               string   `json:"text,omitempty"`
-	Strategy           string   `json:"strategy,omitempty"`
-	KeepLastMessages   int      `json:"keep_last_messages,omitempty"`
-	PreserveRoles      []string `json:"preserve_roles,omitempty"`
-	MaxEstimatedTokens int      `json:"max_estimated_tokens,omitempty"`
-	Reason             string   `json:"reason,omitempty"`
+	Action           string   `json:"action"`
+	Role             string   `json:"role,omitempty"`
+	Position         string   `json:"position,omitempty"`
+	Text             string   `json:"text,omitempty"`
+	Strategy         string   `json:"strategy,omitempty"`
+	KeepLastMessages int      `json:"keep_last_messages,omitempty"`
+	PreserveRoles    []string `json:"preserve_roles,omitempty"`
+	Reason           string   `json:"reason,omitempty"`
 }
 
 type Summary struct {
@@ -49,4 +41,3 @@ type Summary struct {
 	Actions  int
 	Hooks    []string
 }
-

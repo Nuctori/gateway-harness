@@ -18,8 +18,7 @@ Suggested hook mapping:
 Adapter invariants:
 
 - Unknown hooks and actions must fail validation before execution.
-- Legacy steps without `hook` should default to `request.before_upstream`.
+- Each step must declare `hook` or `hooks`; adapters must not invent a default execution phase.
 - `context.inject` should be redacted in logs.
-- `max_context_tokens` is a deprecated compatibility field and should not be a gateway hard reject.
+- Adapter-local guards must be explicit and must not behave like hidden model context limits.
 - The adapter should disable pass-through body mode when a policy may mutate context.
-

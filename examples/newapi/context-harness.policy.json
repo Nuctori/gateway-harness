@@ -5,10 +5,6 @@
       "name": "newapi-coding-harness",
       "models": ["*"],
       "tags": ["domain:coding", "adapter:newapi"],
-      "budget": {
-        "max_patch_ops": 16,
-        "max_added_tokens": 1200
-      },
       "steps": [
         {
           "hook": "request.before_upstream",
@@ -44,4 +40,3 @@
     }
   ]
 }
-

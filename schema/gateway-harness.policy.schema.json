@@ -12,8 +12,7 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/program"
-      },
-      "default": []
+      }
     }
   },
   "required": ["programs"],
@@ -40,9 +39,6 @@
             "type": "string"
           }
         },
-        "budget": {
-          "$ref": "#/$defs/budget"
-        },
         "steps": {
           "type": "array",
           "items": {
@@ -52,27 +48,6 @@
         }
       },
       "required": ["name", "models", "steps"]
-    },
-    "budget": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "max_patch_ops": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 16
-        },
-        "max_added_tokens": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 1200
-        },
-        "max_context_tokens": {
-          "type": "integer",
-          "minimum": 0,
-          "deprecated": true
-        }
-      }
     },
     "step": {
       "type": "object",
@@ -98,7 +73,15 @@
           "minItems": 1
         }
       },
-      "required": ["do"]
+      "required": ["do"],
+      "anyOf": [
+        {
+          "required": ["hook"]
+        },
+        {
+          "required": ["hooks"]
+        }
+      ]
     },
     "hook": {
       "type": "string",
@@ -112,8 +95,7 @@
         "responses.before_upstream",
         "responses.compact.before_model_mapping",
         "responses.compact.before_upstream"
-      ],
-      "default": "request.before_upstream"
+      ]
     },
     "condition": {
       "type": "object",
@@ -147,12 +129,11 @@
         },
         "role": {
           "type": "string",
-          "default": "system"
+          "minLength": 1
         },
         "position": {
           "type": "string",
-          "enum": ["after_existing_system", "before_messages"],
-          "default": "after_existing_system"
+          "enum": ["after_existing_system", "before_messages"]
         },
         "text": {
           "type": "string",
@@ -162,7 +143,7 @@
           "type": "string"
         }
       },
-      "required": ["action", "text"]
+      "required": ["action", "role", "position", "text"]
     },
     "contextTruncateAction": {
       "type": "object",
@@ -180,10 +161,6 @@
           "items": {
             "type": "string"
           }
-        },
-        "max_estimated_tokens": {
-          "type": "integer",
-          "minimum": 0
         },
         "reason": {
           "type": "string"

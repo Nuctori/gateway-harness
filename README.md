@@ -12,7 +12,6 @@ It defines:
 - **Hook**: when a policy runs, for example `request.before_upstream`.
 - **Action**: what context transformation runs, for example `context.inject`.
 - **Condition**: whether a step applies to a model, token estimate, tag, or request shape.
-- **Budget**: the blast-radius limits for harness-owned changes.
 - **Trace**: redacted audit metadata for debugging without leaking prompt content.
 - **Adapter**: host-specific glue for a gateway such as NewAPI.
 

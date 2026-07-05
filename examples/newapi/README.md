@@ -15,5 +15,4 @@ NewAPI adapter responsibilities:
 - Convert Chat / Responses requests into mutable context objects.
 - Execute Gateway Harness actions against those objects.
 - Write redacted trace metadata into NewAPI logs.
-- Keep Gateway Harness budgets transparent and scoped to harness-owned mutations.
-
+- Keep adapter-local guards explicit and avoid hidden model context limits.
