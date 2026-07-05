@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/Nuctori/gateway-harness/adapter"
@@ -46,6 +47,27 @@ func main() {
 		printSummary(p)
 	case "schema":
 		fmt.Print(schema.PolicyJSON)
+	case "dry-run-policy":
+		if len(os.Args) != 5 && len(os.Args) != 6 {
+			usage()
+			os.Exit(2)
+		}
+		p := mustLoadPolicy(os.Args[2])
+		options := policy.DryRunOptions{Hook: os.Args[3]}
+		if len(os.Args) == 6 {
+			estimatedTokens, err := strconv.Atoi(os.Args[5])
+			if err != nil || estimatedTokens < 0 {
+				fmt.Fprintf(os.Stderr, "estimated_tokens must be a non-negative integer\n")
+				os.Exit(2)
+			}
+			options.EstimatedTokens = estimatedTokens
+		}
+		result, err := policy.DryRun(p, mustReadFile("open policy dry-run request", os.Args[4]), options)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "policy dry-run failed: %v\n", err)
+			os.Exit(1)
+		}
+		printJSON(result)
 	case "validate-adapter":
 		if len(os.Args) != 3 {
 			usage()
@@ -207,6 +229,7 @@ Usage:
   gateway-harness validate <policy.json>
   gateway-harness explain <policy.json>
   gateway-harness schema
+  gateway-harness dry-run-policy <policy.json> <hook> <request.json> [estimated_tokens]
   gateway-harness validate-adapter <adapter.capability.json>
   gateway-harness explain-adapter <adapter.capability.json>
   gateway-harness adapter-schema

@@ -43,6 +43,10 @@ guard a mutation, that behavior should be represented by an explicit action or a
 harness must not invent a hidden model context window or reject a request just because its own
 estimate is smaller than the upstream model capacity.
 
+Token estimates are inputs to explicit conditions, not hidden limits. A condition such as
+`estimated_tokens_gt` should only match when the adapter or operator passed an explicit estimate for
+the current dry-run or request trace.
+
 ## Trace
 
 Adapters should emit redacted traces that include:
@@ -53,6 +57,21 @@ Adapters should emit redacted traces that include:
 - action count
 - added estimated tokens
 - content hashes, not raw injected content
+
+## Policy Dry-Run
+
+Policy dry-run is a preflight check for ordinary policies. It reports matched programs, applied
+actions, skipped actions, and redacted patch plans without mutating the request.
+
+Dry-run must not print raw injected text or the full rewritten request. Destructive actions such as
+`context.truncate` are reported as skipped. For Responses requests, insertion planning must preserve
+the stateful protocol prefix (`item_reference`, `function_call`, `function_call_output`, and
+`reasoning`) before inserting context messages.
+
+Compact hooks are ordinary explicit hooks. A compaction-aware adapter may run
+`responses.compact.before_upstream`, emit a ledger `compact` event, or call a configured steward, but
+Gateway Harness core does not silently summarize, truncate, or recover context that the client did
+not send.
 
 ## Ledger
 

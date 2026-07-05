@@ -15,7 +15,7 @@ Gateway Harness releases are independent from NewAPI releases.
   `validate-conformance`, `explain-conformance`, `replay-conformance`, `conformance-schema`,
   `validate-ledger`, `explain-ledger`, `ledger-schema`, `validate-steward`, `explain-steward`,
   `steward-schema`, `validate-steward-proposal`, `explain-steward-proposal`, and
-  `steward-proposal-schema`, and `dry-run-steward-proposal`.
+  `steward-proposal-schema`, `dry-run-policy`, and `dry-run-steward-proposal`.
 - NewAPI example policy and adapter contract documentation.
 - Cross-compiled CLI artifacts for Linux amd64, Linux arm64, Linux armv7, and Windows amd64.
 
@@ -29,6 +29,7 @@ Gateway Harness releases are independent from NewAPI releases.
 - Calling AI stewards implicitly without an explicit steward spec and adapter implementation.
 - Applying AI steward proposals without validating them against their steward spec.
 - Performing destructive proposal edits during dry-run.
+- Performing destructive policy edits during dry-run.
 
 ## Tagging
 

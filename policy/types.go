@@ -41,3 +41,37 @@ type Summary struct {
 	Actions  int
 	Hooks    []string
 }
+
+type DryRunOptions struct {
+	Hook            string
+	Model           string
+	EstimatedTokens int
+}
+
+type DryRunResult struct {
+	Hook            string        `json:"hook"`
+	Model           string        `json:"model"`
+	EstimatedTokens int           `json:"estimated_tokens,omitempty"`
+	MatchedPrograms []string      `json:"matched_programs,omitempty"`
+	AppliedActions  []string      `json:"applied_actions,omitempty"`
+	SkippedActions  []Skipped     `json:"skipped_actions,omitempty"`
+	RequestPatches  []DryRunPatch `json:"request_patches,omitempty"`
+}
+
+type DryRunPatch struct {
+	Program      string `json:"program"`
+	Action       string `json:"action"`
+	Target       string `json:"target"`
+	InsertIndex  int    `json:"insert_index"`
+	Role         string `json:"role"`
+	Position     string `json:"position"`
+	ContentHash  string `json:"content_hash"`
+	ContentChars int    `json:"content_chars"`
+	Reason       string `json:"reason,omitempty"`
+}
+
+type Skipped struct {
+	Program string `json:"program"`
+	Action  string `json:"action"`
+	Reason  string `json:"reason"`
+}

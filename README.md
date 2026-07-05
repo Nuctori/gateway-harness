@@ -40,6 +40,12 @@ Print the JSON Schema:
 gateway-harness schema
 ```
 
+Dry-run a policy against a request copy:
+
+```bash
+gateway-harness dry-run-policy examples/newapi/context-harness.policy.json responses.compact.before_upstream fixtures/newapi/policy-dry-run.request.json
+```
+
 Validate an adapter capability manifest:
 
 ```bash
@@ -144,6 +150,12 @@ without a hash, or silently apply a policy patch.
 `dry-run-steward-proposal` prints a redacted patch plan for non-destructive proposal outputs. It does
 not print the full rewritten request, call an AI, write a database, contact an upstream, or perform
 destructive `context.truncate` edits.
+
+`dry-run-policy` applies the same transparency rule to ordinary policies. It reports matched
+programs, applied actions, skipped destructive actions, and redacted request patch metadata such as
+target, insert index, role, reason, content hash, and content length. It does not print the rewritten
+request or raw injected text. Token-gated conditions only match when the caller provides an explicit
+`estimated_tokens` argument.
 
 ## Project Layout
 

@@ -1,0 +1,13 @@
+{
+  "model": "gpt-5.4-mini",
+  "input": [
+    {
+      "role": "system",
+      "content": "Existing system instruction."
+    },
+    {
+      "role": "user",
+      "content": "Continue the current coding task."
+    }
+  ]
+}
