@@ -9,9 +9,16 @@ Use the CLI to validate the example policy:
 gateway-harness validate examples/newapi/context-harness.policy.json
 ```
 
+Validate the adapter capability manifest:
+
+```bash
+gateway-harness validate-adapter examples/newapi/adapter.capability.json
+```
+
 NewAPI adapter responsibilities:
 
 - Map NewAPI relay phases to Gateway Harness hooks.
+- Publish an explicit adapter capability manifest.
 - Convert Chat / Responses requests into mutable context objects.
 - Execute Gateway Harness actions against those objects.
 - Write redacted trace metadata into NewAPI logs.

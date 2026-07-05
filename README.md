@@ -14,6 +14,7 @@ It defines:
 - **Condition**: whether a step applies to a model, token estimate, tag, or request shape.
 - **Trace**: redacted audit metadata for debugging without leaking prompt content.
 - **Adapter**: host-specific glue for a gateway such as NewAPI.
+- **Adapter Capability**: an explicit manifest for supported hooks, actions, request shapes, and guards.
 
 NewAPI is treated as an adapter example, not as the owner of the Gateway Harness concept.
 
@@ -37,10 +38,17 @@ Print the JSON Schema:
 gateway-harness schema
 ```
 
+Validate an adapter capability manifest:
+
+```bash
+gateway-harness validate-adapter examples/newapi/adapter.capability.json
+```
+
 ## Project Layout
 
 ```text
 cmd/gateway-harness/      CLI entrypoint
+adapter/                  Adapter capability manifest structs and validation
 policy/                   Policy structs, validation, summaries
 schema/                   JSON Schema for editors and WebUI
 docs/                     Concepts and adapter contracts
@@ -53,6 +61,7 @@ The main project should publish:
 
 - `gateway-harness` CLI binaries.
 - `gateway-harness.policy.schema.json`.
+- `gateway-harness.adapter.schema.json`.
 - Checksums.
 - Example policies.
 

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Nuctori/gateway-harness/main/schema/gateway-harness.adapter.schema.json",
+  "title": "Gateway Harness Adapter Capability Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "adapter": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hooks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/hook"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/action"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "request_shapes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/requestShape"
+      },
+      "uniqueItems": true
+    },
+    "guards": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/guard"
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": ["adapter", "hooks", "actions"],
+  "$defs": {
+    "hook": {
+      "type": "string",
+      "enum": [
+        "*",
+        "request.before_model_mapping",
+        "request.before_upstream",
+        "chat.before_model_mapping",
+        "chat.before_upstream",
+        "responses.before_model_mapping",
+        "responses.before_upstream",
+        "responses.compact.before_model_mapping",
+        "responses.compact.before_upstream"
+      ]
+    },
+    "action": {
+      "type": "string",
+      "enum": ["context.inject", "context.truncate"]
+    },
+    "requestShape": {
+      "type": "string",
+      "enum": ["chat", "responses", "responses_compact"]
+    },
+    "guard": {
+      "type": "string",
+      "enum": ["explicit_mutation_only", "preserve_responses_tool_chain", "redacted_trace"]
+    }
+  }
+}

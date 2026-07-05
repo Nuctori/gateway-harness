@@ -5,8 +5,9 @@ Gateway Harness releases are independent from NewAPI releases.
 ## v0.1.x Scope
 
 - Policy structs and validation.
+- Adapter capability structs and validation.
 - JSON Schema for editor and WebUI integration.
-- CLI commands: `validate`, `explain`, and `schema`.
+- CLI commands: `validate`, `explain`, `schema`, `validate-adapter`, `explain-adapter`, and `adapter-schema`.
 - NewAPI example policy and adapter contract documentation.
 - Cross-compiled CLI artifacts for Linux amd64, Linux arm64, Linux armv7, and Windows amd64.
 

@@ -2,6 +2,9 @@
 
 NewAPI is an adapter and example host for Gateway Harness.
 
+The adapter should publish `examples/newapi/adapter.capability.json` as the explicit contract used
+by CLIs, WebUIs, and conformance tests.
+
 Suggested hook mapping:
 
 | Gateway Harness hook                    | NewAPI phase                                |

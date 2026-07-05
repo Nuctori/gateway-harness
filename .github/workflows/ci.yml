@@ -22,3 +22,5 @@ jobs:
       - run: go test ./...
 
       - run: go run ./cmd/gateway-harness validate examples/newapi/context-harness.policy.json
+
+      - run: go run ./cmd/gateway-harness validate-adapter examples/newapi/adapter.capability.json

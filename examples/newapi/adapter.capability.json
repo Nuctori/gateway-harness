@@ -1,0 +1,17 @@
+{
+  "version": "0.2",
+  "adapter": "newapi",
+  "hooks": [
+    "request.before_model_mapping",
+    "request.before_upstream",
+    "chat.before_model_mapping",
+    "chat.before_upstream",
+    "responses.before_model_mapping",
+    "responses.before_upstream",
+    "responses.compact.before_model_mapping",
+    "responses.compact.before_upstream"
+  ],
+  "actions": ["context.inject", "context.truncate"],
+  "request_shapes": ["chat", "responses", "responses_compact"],
+  "guards": ["explicit_mutation_only", "preserve_responses_tool_chain", "redacted_trace"]
+}

@@ -70,7 +70,7 @@ jobs:
 
       - name: Add schema and checksums
         run: |
-          cp schema/gateway-harness.policy.schema.json dist/
+          cp schema/gateway-harness.*.schema.json dist/
           cd dist
           sha256sum * > checksums.txt
 
