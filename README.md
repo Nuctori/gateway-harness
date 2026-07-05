@@ -196,7 +196,7 @@ The main project should publish:
 - `gateway-harness.steward.schema.json`.
 - `gateway-harness.steward-proposal.schema.json`.
 - Checksums.
-- Example policies.
+- `gateway-harness-examples.tar.gz` with examples, fixtures, docs, and README files.
 
 Gateway-specific builds, patches, and images belong in adapter repositories such as
 `newapi-gateway-harness-example`.

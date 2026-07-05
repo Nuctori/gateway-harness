@@ -71,6 +71,14 @@ jobs:
       - name: Add schema and checksums
         run: |
           cp schema/gateway-harness.*.schema.json dist/
+          tar -czf dist/gateway-harness-examples.tar.gz \
+            examples \
+            fixtures \
+            docs \
+            README.md \
+            README.zh-CN.md \
+            RELEASE.md \
+            LICENSE
           cd dist
           sha256sum * > checksums.txt
 

@@ -18,6 +18,7 @@ Gateway Harness releases are independent from NewAPI releases.
   `steward-proposal-schema`, `dry-run-policy`, `replay-policy-conformance`, and
   `dry-run-steward-proposal`.
 - NewAPI example policy and adapter contract documentation.
+- Release archive with examples, fixtures, docs, README files, and license.
 - Cross-compiled CLI artifacts for Linux amd64, Linux arm64, Linux armv7, and Windows amd64.
 
 ## Out Of Scope For v0.1.x

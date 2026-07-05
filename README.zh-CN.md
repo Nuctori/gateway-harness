@@ -887,7 +887,7 @@ Gateway Harness 独立发布。
 - `gateway-harness.steward.schema.json`。
 - `gateway-harness.steward-proposal.schema.json`。
 - checksums。
-- 示例 policy。
+- `gateway-harness-examples.tar.gz`，包含 examples、fixtures、docs 和 README。
 
 网关特定补丁、adapter 实现、Docker 镜像或部署脚本，应放到独立 adapter 仓库或宿主网关仓库。
 
