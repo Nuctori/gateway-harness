@@ -513,6 +513,175 @@ Gateway Harness 的 adapter 必须理解这些边界，宁愿跳过某些 action
 
 Gateway Harness 可以把能力矩阵作为 condition 的输入来源之一；adapter 决定如何把实际模型能力同步进策略执行环境。
 
+### 36. 开发、预发、生产环境分层
+
+同一份网关在不同环境里可能需要不同策略：
+
+- 开发环境开启更详细 trace。
+- 预发环境启用新 hook。
+- 生产环境只启用稳定 program。
+
+Gateway Harness policy 可以按环境拆文件或拆 program；环境选择由部署系统或 adapter 注入。
+
+### 37. 策略 dry-run
+
+上线前可以先只模拟策略，不真正修改请求：
+
+- 输出会命中哪些 program。
+- 输出会执行哪些 action。
+- 输出预计新增多少 token。
+- 输出会影响哪些模型。
+
+这适合未来 `gateway-harness dry-run` 或 adapter 的调试模式。
+
+### 38. 在线问题诊断
+
+当用户反馈“模型突然变啰嗦”或“上下文被改坏”时，可以通过 trace 回答：
+
+- 哪个 policy 版本生效。
+- 哪个 program 命中。
+- 哪个 hook 修改了请求。
+- 是否发生 truncate。
+- 是否发生 failover 后的提示词注入。
+
+这能把线上问题从猜测变成可排查事件。
+
+### 39. 策略版本标记
+
+每份 policy 可以带版本号：
+
+- `version: "0.1"`
+- `version: "2026-07-05"`
+- `version: "team-a-2026w27"`
+
+adapter 可以把 policy version 写入 trace，方便回溯某次请求到底跑的是哪一版上下文策略。
+
+### 40. 用户组差异化体验
+
+不同用户组可以有不同上下文体验：
+
+- 免费组使用短提示词。
+- 专业组使用完整提示词。
+- 内部组启用实验性 hook。
+- 管理员组启用更严格审计。
+
+Gateway Harness 不负责鉴权，但可以让 adapter 根据用户组选择对应 program。
+
+### 41. 模型迁移保护
+
+从旧模型迁移到新模型时，可以临时注入迁移保护提示：
+
+- 保持输出格式不变。
+- 保持工具调用协议不变。
+- 保持中文术语不变。
+- 标记新模型和旧模型的行为差异。
+
+迁移完成后移除这段 policy，比在业务代码里散落 prompt 更容易回滚。
+
+### 42. 输出格式稳定化
+
+某些业务依赖固定输出格式：
+
+- JSON。
+- Markdown。
+- 表格。
+- commit message。
+- issue 模板。
+
+Gateway Harness 可以在特定模型或 endpoint 上注入格式要求；真正的 schema 校验仍应由业务系统或 structured output 能力负责。
+
+### 43. 防止提示词漂移
+
+长期运行的网关容易出现提示词漂移：
+
+- 不同渠道配置不一致。
+- 不同模型默认 prompt 不一致。
+- 临时补丁忘记撤销。
+- UI 手动改动没有审计。
+
+把策略放入 Git，并用 CLI/CI 验证，可以降低这类“隐形 prompt 配置”风险。
+
+### 44. 多 adapter 兼容测试
+
+同一份 policy 可能被多个 adapter 使用：
+
+- NewAPI adapter。
+- 本地 CLI adapter。
+- 测试 harness adapter。
+- 未来的 LiteLLM adapter。
+
+每个 adapter 应声明支持的 hook/action 子集；policy 可以被验证为“对某个 adapter 兼容”。
+
+### 45. 策略 lint
+
+除了语法验证，还可以做 lint：
+
+- program 名称是否清晰。
+- hook 是否过宽。
+- 注入文本是否过长。
+- 是否缺少 reason。
+- 是否使用 deprecated 字段。
+
+v0.1 先做 validation；lint 可以作为后续 CLI 能力。
+
+### 46. 策略影响面分析
+
+改一条 policy 前，系统应能回答：
+
+- 会影响哪些模型。
+- 会影响哪些租户。
+- 会影响哪些 endpoint。
+- 会影响哪些 hook。
+- 最坏会新增多少 token。
+
+这类分析可以由 CLI 读取 policy 和 adapter capability 后生成报告。
+
+### 47. 与计费系统协作
+
+上下文注入会增加 prompt token，因此要和计费系统保持透明：
+
+- trace 记录新增 token 估算。
+- billing 可以区分用户原始输入和 harness 注入。
+- 管理员能看到策略带来的成本变化。
+
+Gateway Harness 只负责暴露可审计信息，不直接决定计费。
+
+### 48. 与缓存策略协作
+
+一些网关会做 prompt cache 或 channel affinity。
+
+Gateway Harness 需要避免让无意义变化破坏缓存：
+
+- 稳定注入文本。
+- 避免随机时间戳。
+- 避免每次请求生成不同 prompt。
+- trace 里记录 hash 而不是原文。
+
+如果 adapter 需要动态注入，应明确这会影响缓存命中。
+
+### 49. 故障兜底策略
+
+如果某个 action 执行失败，adapter 应有明确策略：
+
+- fail closed：拒绝请求。
+- fail open：跳过 harness 继续转发。
+- degrade：只执行安全 action。
+
+哪种策略正确取决于场景。安全策略更适合 fail closed，体验增强类策略更适合 fail open。
+
+### 50. 最小可用 adapter
+
+一个最小 adapter 不需要实现所有能力。
+
+它可以先只支持：
+
+- 读取 policy。
+- 校验 hook/action。
+- 在 `before_upstream` 注入 instructions。
+- 输出脱敏 trace。
+
+这样 Gateway Harness 可以从很小的集成开始，而不是一上来就要求完整可视化编程系统。
+
 ## 不做什么
 
 v0.1 明确不做：
