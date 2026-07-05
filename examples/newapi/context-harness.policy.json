@@ -1,0 +1,47 @@
+{
+  "version": "0.1",
+  "programs": [
+    {
+      "name": "newapi-coding-harness",
+      "models": ["*"],
+      "tags": ["domain:coding", "adapter:newapi"],
+      "budget": {
+        "max_patch_ops": 16,
+        "max_added_tokens": 1200
+      },
+      "steps": [
+        {
+          "hook": "request.before_upstream",
+          "when": {
+            "model_matches": "*"
+          },
+          "do": [
+            {
+              "action": "context.inject",
+              "role": "system",
+              "position": "after_existing_system",
+              "reason": "preserve harness context",
+              "text": "Preserve user intent and prior architecture decisions."
+            }
+          ]
+        },
+        {
+          "hook": "responses.compact.before_upstream",
+          "when": {
+            "model_matches": "*"
+          },
+          "do": [
+            {
+              "action": "context.inject",
+              "role": "system",
+              "position": "after_existing_system",
+              "reason": "compact event reminder",
+              "text": "When compacting context, preserve user goals, decisions, constraints, and unresolved tasks."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+

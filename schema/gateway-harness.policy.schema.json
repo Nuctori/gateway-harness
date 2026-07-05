@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Nuctori/gateway-harness/main/schema/gateway-harness.policy.schema.json",
+  "title": "Gateway Harness Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "programs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/program"
+      },
+      "default": []
+    }
+  },
+  "required": ["programs"],
+  "$defs": {
+    "program": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "models": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "budget": {
+          "$ref": "#/$defs/budget"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/step"
+          },
+          "minItems": 1
+        }
+      },
+      "required": ["name", "models", "steps"]
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_patch_ops": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 16
+        },
+        "max_added_tokens": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 1200
+        },
+        "max_context_tokens": {
+          "type": "integer",
+          "minimum": 0,
+          "deprecated": true
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hook": {
+          "$ref": "#/$defs/hook"
+        },
+        "hooks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/hook"
+          }
+        },
+        "when": {
+          "$ref": "#/$defs/condition"
+        },
+        "do": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/action"
+          },
+          "minItems": 1
+        }
+      },
+      "required": ["do"]
+    },
+    "hook": {
+      "type": "string",
+      "enum": [
+        "*",
+        "request.before_model_mapping",
+        "request.before_upstream",
+        "chat.before_model_mapping",
+        "chat.before_upstream",
+        "responses.before_model_mapping",
+        "responses.before_upstream",
+        "responses.compact.before_model_mapping",
+        "responses.compact.before_upstream"
+      ],
+      "default": "request.before_upstream"
+    },
+    "condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "model_matches": {
+          "type": "string"
+        },
+        "estimated_tokens_gt": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "action": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/contextInjectAction"
+        },
+        {
+          "$ref": "#/$defs/contextTruncateAction"
+        }
+      ]
+    },
+    "contextInjectAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "context.inject"
+        },
+        "role": {
+          "type": "string",
+          "default": "system"
+        },
+        "position": {
+          "type": "string",
+          "enum": ["after_existing_system", "before_messages"],
+          "default": "after_existing_system"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": ["action", "text"]
+    },
+    "contextTruncateAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "context.truncate"
+        },
+        "keep_last_messages": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "preserve_roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "max_estimated_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": ["action"]
+    }
+  }
+}
