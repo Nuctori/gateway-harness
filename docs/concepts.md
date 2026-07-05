@@ -82,6 +82,11 @@ They should not embed raw user prompts, raw model responses, or hidden summaries
 Metadata is for labels and IDs; obvious raw-content keys such as `prompt`, `response`, and
 `messages` are rejected by the ledger validator.
 
+Events can reference session artifacts through `artifact_refs`. For example, a `compact` event can
+point at the exact `compact_summary` artifact that was produced or consumed for that compaction. The
+ledger validator rejects references that do not exist in the same session, so audit trails stay
+linked instead of relying on naming conventions.
+
 Typical event types:
 
 - `request`

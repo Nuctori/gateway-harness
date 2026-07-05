@@ -36,7 +36,10 @@
               "type": "compact",
               "at": "2026-07-05T18:10:00Z",
               "hook": "responses.compact.before_upstream",
-              "trace_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              "trace_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+              "artifact_refs": [
+                "artifact_compact_summary_1"
+              ]
             },
             {
               "id": "evt_error_1",

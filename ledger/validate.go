@@ -89,17 +89,18 @@ func validateSessions(projectID string, sessions []Session) error {
 		if len(session.Events) == 0 {
 			return fmt.Errorf("project %q session %q needs at least one event", projectID, session.ID)
 		}
-		if err := validateEvents(projectID, session.ID, session.Events); err != nil {
+		artifactIDs, err := validateArtifacts(projectID, session.ID, session.Artifacts)
+		if err != nil {
 			return err
 		}
-		if err := validateArtifacts(projectID, session.ID, session.Artifacts); err != nil {
+		if err := validateEvents(projectID, session.ID, session.Events, artifactIDs); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func validateEvents(projectID string, sessionID string, events []Event) error {
+func validateEvents(projectID string, sessionID string, events []Event, artifactIDs map[string]bool) error {
 	eventIDs := map[string]bool{}
 	for i, event := range events {
 		if strings.TrimSpace(event.ID) == "" {
@@ -118,28 +119,44 @@ func validateEvents(projectID string, sessionID string, events []Event) error {
 		if err := validateMetadata("event", event.ID, event.Metadata); err != nil {
 			return fmt.Errorf("project %q session %q %w", projectID, sessionID, err)
 		}
+		if err := validateArtifactRefs(event, artifactIDs); err != nil {
+			return fmt.Errorf("project %q session %q event %q %w", projectID, sessionID, event.ID, err)
+		}
 	}
 	return nil
 }
 
-func validateArtifacts(projectID string, sessionID string, artifacts []Artifact) error {
+func validateArtifacts(projectID string, sessionID string, artifacts []Artifact) (map[string]bool, error) {
 	artifactIDs := map[string]bool{}
 	for i, artifact := range artifacts {
 		if strings.TrimSpace(artifact.ID) == "" {
-			return fmt.Errorf("project %q session %q artifact %d id is required", projectID, sessionID, i)
+			return nil, fmt.Errorf("project %q session %q artifact %d id is required", projectID, sessionID, i)
 		}
 		if artifactIDs[artifact.ID] {
-			return fmt.Errorf("project %q session %q duplicate artifact id %q", projectID, sessionID, artifact.ID)
+			return nil, fmt.Errorf("project %q session %q duplicate artifact id %q", projectID, sessionID, artifact.ID)
 		}
 		artifactIDs[artifact.ID] = true
 		if !SupportedArtifactTypes[artifact.Type] {
-			return fmt.Errorf("project %q session %q artifact %q unsupported type %q", projectID, sessionID, artifact.ID, artifact.Type)
+			return nil, fmt.Errorf("project %q session %q artifact %q unsupported type %q", projectID, sessionID, artifact.ID, artifact.Type)
 		}
 		if strings.TrimSpace(artifact.ContentHash) == "" {
-			return fmt.Errorf("project %q session %q artifact %q content_hash is required", projectID, sessionID, artifact.ID)
+			return nil, fmt.Errorf("project %q session %q artifact %q content_hash is required", projectID, sessionID, artifact.ID)
 		}
 		if err := validateMetadata("artifact", artifact.ID, artifact.Metadata); err != nil {
-			return fmt.Errorf("project %q session %q %w", projectID, sessionID, err)
+			return nil, fmt.Errorf("project %q session %q %w", projectID, sessionID, err)
+		}
+	}
+	return artifactIDs, nil
+}
+
+func validateArtifactRefs(event Event, artifactIDs map[string]bool) error {
+	for i, ref := range event.ArtifactRefs {
+		ref = strings.TrimSpace(ref)
+		if ref == "" {
+			return fmt.Errorf("artifact_refs[%d] is empty", i)
+		}
+		if !artifactIDs[ref] {
+			return fmt.Errorf("artifact ref %q does not exist in session artifacts", ref)
 		}
 	}
 	return nil

@@ -48,6 +48,17 @@ func TestValidateRejectsRawMetadataKey(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsMissingArtifactRef(t *testing.T) {
+	raw := strings.Replace(projectSessionLedgerJSON, `"artifact_refs": ["artifact_compact_summary_1"]`, `"artifact_refs": ["artifact_missing"]`, 1)
+	l, err := Decode(strings.NewReader(raw))
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if err := Validate(l); err == nil {
+		t.Fatal("expected missing artifact ref error")
+	}
+}
+
 const projectSessionLedgerJSON = `{
   "version": "0.3",
   "projects": [
@@ -84,7 +95,8 @@ const projectSessionLedgerJSON = `{
               "type": "compact",
               "at": "2026-07-05T18:10:00Z",
               "hook": "responses.compact.before_upstream",
-              "trace_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+              "trace_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+              "artifact_refs": ["artifact_compact_summary_1"]
             },
             {
               "id": "evt_error_1",

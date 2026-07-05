@@ -32,6 +32,7 @@ type Event struct {
 	PolicyVersion string            `json:"policy_version,omitempty"`
 	TraceHash     string            `json:"trace_hash,omitempty"`
 	ErrorCode     string            `json:"error_code,omitempty"`
+	ArtifactRefs  []string          `json:"artifact_refs,omitempty"`
 	Metadata      map[string]string `json:"metadata,omitempty"`
 }
 

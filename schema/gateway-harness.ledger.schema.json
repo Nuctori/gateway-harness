@@ -131,6 +131,14 @@
         "error_code": {
           "type": "string"
         },
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
         "metadata": {
           "$ref": "#/$defs/stringMap"
         }
