@@ -50,3 +50,5 @@ jobs:
       - run: ./dist/gateway-harness explain-steward-proposal fixtures/newapi/compact-context.steward.json fixtures/newapi/compact-context.steward-proposal.json
 
       - run: ./dist/gateway-harness steward-proposal-schema > /tmp/gateway-harness.steward-proposal.schema.json
+
+      - run: ./dist/gateway-harness dry-run-steward-proposal fixtures/newapi/compact-context.steward.json fixtures/newapi/compact-context.steward-proposal.json fixtures/newapi/compact-context.request.json

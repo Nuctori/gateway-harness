@@ -53,3 +53,35 @@ type ProposalSummary struct {
 	Hook    string
 	Outputs int
 }
+
+type DryRunResult struct {
+	ProposalID     string        `json:"proposal_id"`
+	Steward        string        `json:"steward"`
+	Hook           string        `json:"hook"`
+	AppliedActions []string      `json:"applied_actions"`
+	RequestPatches []DryRunPatch `json:"request_patches,omitempty"`
+	Artifacts      []DryRunRef   `json:"artifacts,omitempty"`
+	PolicyPatches  []DryRunRef   `json:"policy_patches,omitempty"`
+	Diagnostics    []DryRunRef   `json:"diagnostics,omitempty"`
+	SessionTags    []string      `json:"session_tags,omitempty"`
+}
+
+type DryRunRef struct {
+	Type        string `json:"type,omitempty"`
+	ContentHash string `json:"content_hash,omitempty"`
+	PatchHash   string `json:"patch_hash,omitempty"`
+	NoteHash    string `json:"note_hash,omitempty"`
+	Ref         string `json:"ref"`
+	Description string `json:"description,omitempty"`
+	Severity    string `json:"severity,omitempty"`
+}
+
+type DryRunPatch struct {
+	Action       string `json:"action"`
+	Target       string `json:"target"`
+	InsertIndex  int    `json:"insert_index"`
+	Role         string `json:"role"`
+	Position     string `json:"position"`
+	ContentHash  string `json:"content_hash"`
+	ContentChars int    `json:"content_chars"`
+}

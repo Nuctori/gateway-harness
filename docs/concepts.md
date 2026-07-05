@@ -113,3 +113,7 @@ Proposal outputs are action-shaped records, not free-form transcripts. For examp
 - `context.inject` must include role, position, and text.
 - `ledger.artifact.create` must include artifact type, content hash, and reference.
 - `policy.patch.propose` must include patch hash, reference, and description.
+
+Dry-run prints a redacted patch plan for non-destructive outputs. It must not print the full
+rewritten request, contact an upstream, write persistent state, call an AI, or perform destructive
+context edits such as truncate.

@@ -118,6 +118,12 @@ Print the steward proposal schema:
 gateway-harness steward-proposal-schema
 ```
 
+Dry-run a steward proposal against a request copy:
+
+```bash
+gateway-harness dry-run-steward-proposal fixtures/newapi/compact-context.steward.json fixtures/newapi/compact-context.steward-proposal.json fixtures/newapi/compact-context.request.json
+```
+
 Conformance fixtures validate Gateway Harness contracts, adapter capabilities, and realistic request
 shapes. `replay-conformance` posts the fixture request to a local fake upstream to exercise the HTTP
 path without network access or model calls. It does not replace live upstream tests.
@@ -134,6 +140,10 @@ implements that explicit sidecar behavior.
 Steward proposals validate what an AI steward actually returned. A proposal is checked against the
 spec that enabled it, so an AI cannot use a disabled hook, emit an unlisted action, write an artifact
 without a hash, or silently apply a policy patch.
+
+`dry-run-steward-proposal` prints a redacted patch plan for non-destructive proposal outputs. It does
+not print the full rewritten request, call an AI, write a database, contact an upstream, or perform
+destructive `context.truncate` edits.
 
 ## Project Layout
 

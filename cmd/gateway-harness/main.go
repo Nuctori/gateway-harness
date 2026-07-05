@@ -146,6 +146,20 @@ func main() {
 		printStewardProposalSummary(p)
 	case "steward-proposal-schema":
 		fmt.Print(schema.StewardProposalJSON)
+	case "dry-run-steward-proposal":
+		if len(os.Args) != 5 {
+			usage()
+			os.Exit(2)
+		}
+		s := mustLoadStewardSpec(os.Args[2])
+		p := mustLoadStewardProposal(os.Args[3])
+		request := mustReadFile("open steward dry-run request", os.Args[4])
+		result, err := steward.DryRunProposal(s, p, request)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "steward proposal dry-run failed: %v\n", err)
+			os.Exit(1)
+		}
+		printJSON(result)
 	case "validate-conformance":
 		if len(os.Args) != 3 {
 			usage()
@@ -208,7 +222,8 @@ Usage:
   gateway-harness steward-schema
   gateway-harness validate-steward-proposal <steward.json> <proposal.json>
   gateway-harness explain-steward-proposal <steward.json> <proposal.json>
-  gateway-harness steward-proposal-schema`)
+  gateway-harness steward-proposal-schema
+  gateway-harness dry-run-steward-proposal <steward.json> <proposal.json> <request.json>`)
 }
 
 func mustLoadPolicy(path string) policy.Policy {
@@ -307,6 +322,15 @@ func mustLoadStewardProposal(path string) steward.Proposal {
 	return p
 }
 
+func mustReadFile(label string, path string) []byte {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s: %v\n", label, err)
+		os.Exit(1)
+	}
+	return data
+}
+
 func printSummary(p policy.Policy) {
 	summary := policy.Summarize(p)
 	data := map[string]any{
@@ -359,6 +383,11 @@ func printReplayResult(result conformance.ReplayResult) {
 		"request_body": result.RequestBody,
 	}
 	encoded, _ := json.MarshalIndent(data, "", "  ")
+	fmt.Println(string(encoded))
+}
+
+func printJSON(value any) {
+	encoded, _ := json.MarshalIndent(value, "", "  ")
 	fmt.Println(string(encoded))
 }
 
