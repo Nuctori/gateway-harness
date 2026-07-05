@@ -28,11 +28,13 @@
           },
           "do": [
             {
-              "action": "context.inject",
+              "action": "context.inject_ledger_summary",
               "role": "system",
               "position": "after_existing_system",
-              "reason": "compact event reminder",
-              "text": "When compacting context, preserve user goals, decisions, constraints, and unresolved tasks."
+              "ledger_ref": "ledger://project_gateway_harness/session_codex_context_harness",
+              "artifact_refs": ["artifact_compact_summary_1"],
+              "reason": "compact ledger sentinel",
+              "text": "Project memory sentinel: preserve explicit user goals, architecture decisions, deployment constraints, open PR status, and unresolved tasks from the referenced ledger summary."
             }
           ]
         }

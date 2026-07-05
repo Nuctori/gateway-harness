@@ -22,6 +22,8 @@ An action is a context transformation primitive.
 Current actions:
 
 - `context.inject`: insert or append a context fragment.
+- `context.inject_ledger_summary`: insert an explicit project/session ledger summary supplied by
+  the adapter or operator.
 - `context.truncate`: keep a recent tail of context and optionally preserve roles.
 
 Actions are not product features. They are context programming operations that adapters execute
@@ -72,6 +74,11 @@ Compact hooks are ordinary explicit hooks. A compaction-aware adapter may run
 `responses.compact.before_upstream`, emit a ledger `compact` event, or call a configured steward, but
 Gateway Harness core does not silently summarize, truncate, or recover context that the client did
 not send.
+
+`context.inject_ledger_summary` is the transparent version of a compaction sentinel. The policy must
+name a `ledger_ref` and provide the summary text it intends to inject. Gateway Harness records only
+the source, ledger reference, artifact references, content hash, and content length in dry-run and
+trace output. It does not read hidden local state, call an AI, or invent a summary at runtime.
 
 ## Policy Apply Replay
 

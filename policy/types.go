@@ -31,8 +31,11 @@ type Action struct {
 	Role             string   `json:"role,omitempty"`
 	Position         string   `json:"position,omitempty"`
 	Text             string   `json:"text,omitempty"`
+	Source           string   `json:"source,omitempty"`
+	LedgerRef        string   `json:"ledger_ref,omitempty"`
+	ArtifactRefs     []string `json:"artifact_refs,omitempty"`
 	Strategy         string   `json:"strategy,omitempty"`
-	KeepLastMessages int      `json:"keep_last_messages,omitempty"`
+	KeepLastMessages *int     `json:"keep_last_messages,omitempty"`
 	PreserveRoles    []string `json:"preserve_roles,omitempty"`
 	Reason           string   `json:"reason,omitempty"`
 }
@@ -61,15 +64,18 @@ type DryRunResult struct {
 }
 
 type DryRunPatch struct {
-	Program      string `json:"program"`
-	Action       string `json:"action"`
-	Target       string `json:"target"`
-	InsertIndex  int    `json:"insert_index"`
-	Role         string `json:"role"`
-	Position     string `json:"position"`
-	ContentHash  string `json:"content_hash"`
-	ContentChars int    `json:"content_chars"`
-	Reason       string `json:"reason,omitempty"`
+	Program      string   `json:"program"`
+	Action       string   `json:"action"`
+	Target       string   `json:"target"`
+	InsertIndex  int      `json:"insert_index"`
+	Role         string   `json:"role"`
+	Position     string   `json:"position"`
+	Source       string   `json:"source,omitempty"`
+	LedgerRef    string   `json:"ledger_ref,omitempty"`
+	ArtifactRefs []string `json:"artifact_refs,omitempty"`
+	ContentHash  string   `json:"content_hash"`
+	ContentChars int      `json:"content_chars"`
+	Reason       string   `json:"reason,omitempty"`
 }
 
 type Skipped struct {
@@ -101,15 +107,18 @@ type ApplyTrace struct {
 }
 
 type TraceOperation struct {
-	Program      string `json:"program"`
-	Op           string `json:"op"`
-	Action       string `json:"action"`
-	Target       string `json:"target"`
-	InsertIndex  int    `json:"insert_index"`
-	Role         string `json:"role"`
-	ContentHash  string `json:"content_hash"`
-	ContentChars int    `json:"content_chars"`
-	Reason       string `json:"reason,omitempty"`
+	Program      string   `json:"program"`
+	Op           string   `json:"op"`
+	Action       string   `json:"action"`
+	Target       string   `json:"target"`
+	InsertIndex  int      `json:"insert_index"`
+	Role         string   `json:"role"`
+	Source       string   `json:"source,omitempty"`
+	LedgerRef    string   `json:"ledger_ref,omitempty"`
+	ArtifactRefs []string `json:"artifact_refs,omitempty"`
+	ContentHash  string   `json:"content_hash"`
+	ContentChars int      `json:"content_chars"`
+	Reason       string   `json:"reason,omitempty"`
 }
 
 type TraceSummary struct {

@@ -51,7 +51,7 @@ func DryRun(p Policy, request []byte, options DryRunOptions) (DryRunResult, erro
 			}
 			for _, action := range step.Do {
 				switch action.Action {
-				case "context.inject":
+				case "context.inject", "context.inject_ledger_summary":
 					patch, err := planContextInject(program.Name, obj, action)
 					if err != nil {
 						return DryRunResult{}, err
@@ -136,10 +136,23 @@ func newInjectPatch(program string, target string, index int, action Action) Dry
 		InsertIndex:  index,
 		Role:         action.Role,
 		Position:     action.Position,
+		Source:       injectSource(action),
+		LedgerRef:    action.LedgerRef,
+		ArtifactRefs: append([]string(nil), action.ArtifactRefs...),
 		ContentHash:  fmt.Sprintf("sha256:%x", hash),
 		ContentChars: len([]rune(action.Text)),
 		Reason:       action.Reason,
 	}
+}
+
+func injectSource(action Action) string {
+	if strings.TrimSpace(action.Source) != "" {
+		return action.Source
+	}
+	if action.Action == "context.inject_ledger_summary" {
+		return "ledger.summary"
+	}
+	return ""
 }
 
 func insertResponsesInputIndex(items []any, position string) int {

@@ -1,0 +1,57 @@
+{
+  "name": "newapi-responses-compact-ledger-sentinel",
+  "request_shape": "responses_compact",
+  "required_guards": ["explicit_mutation_only", "preserve_responses_tool_chain", "redacted_trace"],
+  "adapter": {
+    "version": "0.3",
+    "adapter": "newapi",
+    "hooks": ["responses.compact.before_upstream"],
+    "actions": ["context.inject_ledger_summary"],
+    "request_shapes": ["responses_compact"],
+    "guards": ["explicit_mutation_only", "preserve_responses_tool_chain", "redacted_trace"]
+  },
+  "policy": {
+    "version": "0.3",
+    "programs": [
+      {
+        "name": "compact-ledger-sentinel",
+        "models": ["*"],
+        "steps": [
+          {
+            "hook": "responses.compact.before_upstream",
+            "do": [
+              {
+                "action": "context.inject_ledger_summary",
+                "role": "system",
+                "position": "after_existing_system",
+                "ledger_ref": "ledger://project_gateway_harness/session_codex_context_harness",
+                "artifact_refs": ["artifact_compact_summary_1"],
+                "text": "Project memory sentinel: preserve explicit user goals, architecture decisions, deployment constraints, open PR status, and unresolved tasks from the referenced ledger summary.",
+                "reason": "compact ledger sentinel"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "request": {
+    "model": "gpt-5.4-mini",
+    "previous_response_id": "resp_1",
+    "input": [
+      {
+        "type": "item_reference",
+        "id": "fc_1"
+      },
+      {
+        "type": "function_call_output",
+        "call_id": "call_1",
+        "output": "{\"ok\":true}"
+      },
+      {
+        "role": "user",
+        "content": "continue after compact"
+      }
+    ]
+  }
+}

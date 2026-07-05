@@ -61,7 +61,7 @@
     },
     "action": {
       "type": "string",
-      "enum": ["context.inject", "context.truncate"]
+      "enum": ["context.inject", "context.inject_ledger_summary", "context.truncate"]
     },
     "requestShape": {
       "type": "string",

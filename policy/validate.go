@@ -21,8 +21,9 @@ var SupportedHooks = map[string]bool{
 }
 
 var SupportedActions = map[string]bool{
-	"context.inject":   true,
-	"context.truncate": true,
+	"context.inject":                true,
+	"context.inject_ledger_summary": true,
+	"context.truncate":              true,
 }
 
 func Decode(r io.Reader) (Policy, error) {
@@ -88,21 +89,71 @@ func validateAction(action Action) error {
 	}
 	switch action.Action {
 	case "context.inject":
-		if strings.TrimSpace(action.Text) == "" {
-			return fmt.Errorf("context.inject text is required")
+		if err := validateInjectShape(action); err != nil {
+			return fmt.Errorf("context.inject %w", err)
 		}
-		if strings.TrimSpace(action.Role) == "" {
-			return fmt.Errorf("context.inject role is required")
+		if hasLedgerProvenance(action) {
+			return fmt.Errorf("context.inject ledger provenance fields require context.inject_ledger_summary")
 		}
-		if strings.TrimSpace(action.Position) == "" {
-			return fmt.Errorf("context.inject position is required")
+		if hasTruncateFields(action) {
+			return fmt.Errorf("context.inject truncate fields are not allowed")
+		}
+	case "context.inject_ledger_summary":
+		if err := validateInjectShape(action); err != nil {
+			return fmt.Errorf("context.inject_ledger_summary %w", err)
+		}
+		if strings.TrimSpace(action.LedgerRef) == "" {
+			return fmt.Errorf("context.inject_ledger_summary ledger_ref is required")
+		}
+		if strings.TrimSpace(action.Source) != "" && action.Source != "ledger.summary" {
+			return fmt.Errorf("context.inject_ledger_summary source must be ledger.summary")
+		}
+		if hasTruncateFields(action) {
+			return fmt.Errorf("context.inject_ledger_summary truncate fields are not allowed")
 		}
 	case "context.truncate":
-		if action.KeepLastMessages < 0 {
+		if hasInjectFields(action) || hasLedgerProvenance(action) {
+			return fmt.Errorf("context.truncate inject fields are not allowed")
+		}
+		if strings.TrimSpace(action.Strategy) != "" {
+			return fmt.Errorf("context.truncate strategy is not supported")
+		}
+		if action.KeepLastMessages != nil && *action.KeepLastMessages < 0 {
 			return fmt.Errorf("context.truncate limits must not be negative")
 		}
 	}
 	return nil
+}
+
+func validateInjectShape(action Action) error {
+	if strings.TrimSpace(action.Text) == "" {
+		return fmt.Errorf("text is required")
+	}
+	if strings.TrimSpace(action.Role) == "" {
+		return fmt.Errorf("role is required")
+	}
+	if strings.TrimSpace(action.Position) == "" {
+		return fmt.Errorf("position is required")
+	}
+	return nil
+}
+
+func hasLedgerProvenance(action Action) bool {
+	return strings.TrimSpace(action.Source) != "" ||
+		strings.TrimSpace(action.LedgerRef) != "" ||
+		len(action.ArtifactRefs) > 0
+}
+
+func hasTruncateFields(action Action) bool {
+	return strings.TrimSpace(action.Strategy) != "" ||
+		action.KeepLastMessages != nil ||
+		len(action.PreserveRoles) > 0
+}
+
+func hasInjectFields(action Action) bool {
+	return strings.TrimSpace(action.Role) != "" ||
+		strings.TrimSpace(action.Position) != "" ||
+		strings.TrimSpace(action.Text) != ""
 }
 
 func EffectiveHooks(step Step) []string {

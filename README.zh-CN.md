@@ -62,6 +62,7 @@ v0.1 是一个最小但可发布的契约版本：
 当前内置 action：
 
 - `context.inject`：注入一段上下文。
+- `context.inject_ledger_summary`：注入一段由 adapter 或操作者显式提供的项目/会话 ledger 摘要。
 - `context.truncate`：保留最近若干条上下文，并可保留指定角色。
 
 当前内置 hook：
@@ -204,6 +205,8 @@ Steward proposal 验证的是“AI 实际返回了什么”。Proposal 必须拿
 `dry-run-steward-proposal` 只打印非破坏性 proposal 输出的脱敏 patch plan。它不打印完整改写请求、不调用 AI、不写数据库、不请求上游，也不会便利执行 `context.truncate` 这种破坏性上下文编辑。
 
 `dry-run-policy` 把同样的透明性边界用于普通 policy。它只输出命中的 program、会执行的 action、被跳过的破坏性 action，以及脱敏 request patch 元数据，例如 target、insert index、role、reason、content hash 和内容长度。它不打印完整改写请求，也不打印原始注入文本。带 `estimated_tokens_gt` 的条件只有在调用方显式传入 `estimated_tokens` 参数时才会命中。
+
+对压缩感知 adapter，推荐用 `context.inject_ledger_summary` 做显式 sentinel。adapter 或操作者必须提供要注入的摘要文本，并声明 `ledger_ref` 和可选的 `artifact_refs`；Gateway Harness 只应用这次显式 patch，并在 dry-run/trace 里记录脱敏来源、hash 和长度。
 
 ## 示例 policy
 

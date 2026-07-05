@@ -116,6 +116,9 @@
           "$ref": "#/$defs/contextInjectAction"
         },
         {
+          "$ref": "#/$defs/contextInjectLedgerSummaryAction"
+        },
+        {
           "$ref": "#/$defs/contextTruncateAction"
         }
       ]
@@ -144,6 +147,46 @@
         }
       },
       "required": ["action", "role", "position", "text"]
+    },
+    "contextInjectLedgerSummaryAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "context.inject_ledger_summary"
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "position": {
+          "type": "string",
+          "enum": ["after_existing_system", "before_messages"]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "const": "ledger.summary"
+        },
+        "ledger_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": ["action", "role", "position", "text", "ledger_ref"]
     },
     "contextTruncateAction": {
       "type": "object",

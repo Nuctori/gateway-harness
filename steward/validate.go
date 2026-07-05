@@ -282,14 +282,16 @@ func validateProposalOutput(s Spec, hook string, output Output) error {
 
 func validateProposalPolicyAction(hook string, output Output) error {
 	action := policy.Action{
-		Action:           output.Action,
-		Role:             output.Role,
-		Position:         output.Position,
-		Text:             output.Text,
-		Strategy:         output.Strategy,
-		KeepLastMessages: output.KeepLastMessages,
-		PreserveRoles:    output.PreserveRoles,
-		Reason:           output.Reason,
+		Action:        output.Action,
+		Role:          output.Role,
+		Position:      output.Position,
+		Text:          output.Text,
+		Strategy:      output.Strategy,
+		PreserveRoles: output.PreserveRoles,
+		Reason:        output.Reason,
+	}
+	if output.KeepLastMessages != 0 {
+		action.KeepLastMessages = &output.KeepLastMessages
 	}
 	return policy.Validate(policy.Policy{Programs: []policy.Program{{
 		Name:   "steward-proposal",

@@ -53,6 +53,43 @@ func TestApplySkipsDestructiveTruncate(t *testing.T) {
 	}
 }
 
+func TestApplyLedgerSummaryInjectsRequestAndRedactsTrace(t *testing.T) {
+	p, err := Decode(strings.NewReader(ledgerSummaryPolicyDryRunJSON))
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	result, err := Apply(p, []byte(statefulResponsesRequestJSON), ApplyOptions{Hook: "responses.compact.before_upstream"})
+	if err != nil {
+		t.Fatalf("apply: %v", err)
+	}
+	if len(result.AppliedActions) != 1 || result.AppliedActions[0] != "context.inject_ledger_summary" {
+		t.Fatalf("unexpected applied actions: %+v", result.AppliedActions)
+	}
+	if len(result.Trace.Operations) != 1 {
+		t.Fatalf("expected one trace operation: %+v", result.Trace.Operations)
+	}
+	operation := result.Trace.Operations[0]
+	if operation.Source != "ledger.summary" || operation.LedgerRef == "" {
+		t.Fatalf("missing ledger trace source: %+v", operation)
+	}
+	if strings.Contains(mustMarshalApplyResult(t, result), "Gateway Harness project memory") {
+		t.Fatalf("apply result leaked raw ledger summary: %s", mustMarshalApplyResult(t, result))
+	}
+
+	var obj map[string]any
+	if err := json.Unmarshal(result.Request, &obj); err != nil {
+		t.Fatalf("decode applied request: %v", err)
+	}
+	input := obj["input"].([]any)
+	injected := input[2].(map[string]any)
+	if injected["role"] != "system" || !strings.Contains(injected["content"].(string), "Gateway Harness project memory") {
+		t.Fatalf("unexpected injected ledger summary: %+v", injected)
+	}
+	if input[0].(map[string]any)["type"] != "item_reference" || input[1].(map[string]any)["type"] != "function_call_output" {
+		t.Fatalf("responses tool-chain prefix was not preserved: %+v", input)
+	}
+}
+
 func mustMarshalApplyResult(t *testing.T, result ApplyResult) string {
 	t.Helper()
 	encoded, err := json.Marshal(result)

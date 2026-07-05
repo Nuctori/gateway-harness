@@ -11,7 +11,7 @@
     "responses.compact.before_model_mapping",
     "responses.compact.before_upstream"
   ],
-  "actions": ["context.inject", "context.truncate"],
+  "actions": ["context.inject", "context.inject_ledger_summary", "context.truncate"],
   "request_shapes": ["chat", "responses", "responses_compact"],
   "guards": ["explicit_mutation_only", "preserve_responses_tool_chain", "redacted_trace"]
 }

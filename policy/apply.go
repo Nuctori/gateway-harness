@@ -52,7 +52,7 @@ func Apply(p Policy, request []byte, options ApplyOptions) (ApplyResult, error) 
 			}
 			for _, action := range step.Do {
 				switch action.Action {
-				case "context.inject":
+				case "context.inject", "context.inject_ledger_summary":
 					operation, err := applyContextInject(program.Name, obj, action)
 					if err != nil {
 						return ApplyResult{}, err
@@ -129,6 +129,9 @@ func newTraceOperation(program string, target string, index int, action Action) 
 		Target:       patch.Target,
 		InsertIndex:  patch.InsertIndex,
 		Role:         patch.Role,
+		Source:       patch.Source,
+		LedgerRef:    patch.LedgerRef,
+		ArtifactRefs: append([]string(nil), patch.ArtifactRefs...),
 		ContentHash:  patch.ContentHash,
 		ContentChars: patch.ContentChars,
 		Reason:       patch.Reason,

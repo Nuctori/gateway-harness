@@ -17,6 +17,9 @@ It defines:
 - **Adapter Capability**: an explicit manifest for supported hooks, actions, request shapes, and guards.
 - **Ledger**: project/session/event audit records that reference hashes and external artifacts instead of raw prompt content.
 - **Steward**: an explicit AI-in-the-loop sidecar contract for proposing validated context patches and audit artifacts.
+- **Ledger Sentinel**: an explicit `context.inject_ledger_summary` action for reinjecting a
+  project/session memory summary after compaction without hidden truncation, hidden budgets, or
+  implicit AI calls.
 
 NewAPI is treated as an adapter example, not as the owner of the Gateway Harness concept.
 
@@ -168,6 +171,10 @@ programs, applied actions, skipped destructive actions, and redacted request pat
 target, insert index, role, reason, content hash, and content length. It does not print the rewritten
 request or raw injected text. Token-gated conditions only match when the caller provides an explicit
 `estimated_tokens` argument.
+
+For compaction-aware adapters, `context.inject_ledger_summary` is the recommended sentinel action.
+The adapter or operator supplies the summary text explicitly and names the `ledger_ref` plus any
+`artifact_refs`; Gateway Harness only applies the explicit patch and records redacted provenance.
 
 ## Project Layout
 
