@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Nuctori/gateway-harness/main/schema/gateway-harness.conformance.schema.json",
+  "title": "Gateway Harness Conformance Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "request_shape": {
+      "type": "string",
+      "enum": ["chat", "responses", "responses_compact"]
+    },
+    "required_guards": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["explicit_mutation_only", "preserve_responses_tool_chain", "redacted_trace"]
+      },
+      "uniqueItems": true
+    },
+    "adapter": {
+      "$ref": "gateway-harness.adapter.schema.json"
+    },
+    "policy": {
+      "$ref": "gateway-harness.policy.schema.json"
+    },
+    "request": {
+      "type": "object"
+    }
+  },
+  "required": ["name", "request_shape", "adapter", "policy"]
+}

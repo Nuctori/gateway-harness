@@ -44,15 +44,32 @@ Validate an adapter capability manifest:
 gateway-harness validate-adapter examples/newapi/adapter.capability.json
 ```
 
+Validate a conformance fixture:
+
+```bash
+gateway-harness validate-conformance fixtures/newapi/responses-tool-chain.conformance.json
+```
+
+Print the conformance fixture schema:
+
+```bash
+gateway-harness conformance-schema
+```
+
+Conformance fixtures validate Gateway Harness contracts, adapter capabilities, and realistic request
+shapes. They do not replace end-to-end tests against a fake or live upstream server.
+
 ## Project Layout
 
 ```text
 cmd/gateway-harness/      CLI entrypoint
 adapter/                  Adapter capability manifest structs and validation
+conformance/              Protocol fixture validation
 policy/                   Policy structs, validation, summaries
 schema/                   JSON Schema for editors and WebUI
 docs/                     Concepts and adapter contracts
 examples/newapi/          NewAPI adapter example policy
+fixtures/newapi/          NewAPI conformance fixtures
 ```
 
 ## Release Shape
@@ -62,6 +79,7 @@ The main project should publish:
 - `gateway-harness` CLI binaries.
 - `gateway-harness.policy.schema.json`.
 - `gateway-harness.adapter.schema.json`.
+- `gateway-harness.conformance.schema.json`.
 - Checksums.
 - Example policies.
 

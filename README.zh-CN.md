@@ -97,6 +97,20 @@ gateway-harness schema
 gateway-harness validate-adapter examples/newapi/adapter.capability.json
 ```
 
+验证 conformance fixture：
+
+```bash
+gateway-harness validate-conformance fixtures/newapi/responses-tool-chain.conformance.json
+```
+
+打印 conformance fixture schema：
+
+```bash
+gateway-harness conformance-schema
+```
+
+Conformance fixture 验证的是 Gateway Harness 契约、adapter capability 和真实请求形态。它不是 fake upstream 或 live upstream 的端到端测试，后续可以在这个基础上继续加 HTTP fake server。
+
 ## 示例 policy
 
 ```json
@@ -489,6 +503,8 @@ v0.1 CLI 先提供 validation；后续可以扩展 `gateway-harness test` 来执
 
 Gateway Harness 的 adapter 必须理解这些边界，宁愿跳过某些 action，也不要破坏上游协议。
 
+v0.2 起，contract conformance fixture 可以把这类真实请求形态固化进 CI，避免未来改 schema、adapter 或 WebUI 时不小心破坏协议边界。它验证契约和请求形态，不替代完整的上游 HTTP 端到端测试。
+
 ### 33. 面向组织的策略分层
 
 大型组织可以把策略分成几层：
@@ -712,10 +728,12 @@ v0.1 明确不做：
 ```text
 cmd/gateway-harness/      CLI 入口
 adapter/                  Adapter capability 类型和校验
+conformance/              协议 fixture 校验
 policy/                   Policy 类型、校验和摘要
 schema/                   JSON Schema
 docs/                     概念和 adapter 契约
 examples/newapi/          NewAPI adapter 示例 policy
+fixtures/newapi/          NewAPI conformance fixtures
 ```
 
 ## 发布方式
@@ -727,6 +745,7 @@ Gateway Harness 独立发布。
 - `gateway-harness` CLI。
 - `gateway-harness.policy.schema.json`。
 - `gateway-harness.adapter.schema.json`。
+- `gateway-harness.conformance.schema.json`。
 - checksums。
 - 示例 policy。
 

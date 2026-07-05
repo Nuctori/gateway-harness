@@ -7,3 +7,6 @@ var PolicyJSON string
 
 //go:embed gateway-harness.adapter.schema.json
 var AdapterJSON string
+
+//go:embed gateway-harness.conformance.schema.json
+var ConformanceJSON string

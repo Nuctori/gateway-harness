@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Nuctori/gateway-harness/adapter"
+	"github.com/Nuctori/gateway-harness/conformance"
 	"github.com/Nuctori/gateway-harness/policy"
 	"github.com/Nuctori/gateway-harness/schema"
 )
@@ -66,6 +67,30 @@ func main() {
 		printAdapterSummary(m)
 	case "adapter-schema":
 		fmt.Print(schema.AdapterJSON)
+	case "conformance-schema":
+		fmt.Print(schema.ConformanceJSON)
+	case "validate-conformance":
+		if len(os.Args) != 3 {
+			usage()
+			os.Exit(2)
+		}
+		f := mustLoadConformanceFixture(os.Args[2])
+		if err := conformance.Validate(f); err != nil {
+			fmt.Fprintf(os.Stderr, "invalid conformance fixture: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("conformance fixture ok")
+	case "explain-conformance":
+		if len(os.Args) != 3 {
+			usage()
+			os.Exit(2)
+		}
+		f := mustLoadConformanceFixture(os.Args[2])
+		if err := conformance.Validate(f); err != nil {
+			fmt.Fprintf(os.Stderr, "invalid conformance fixture: %v\n", err)
+			os.Exit(1)
+		}
+		printConformanceSummary(f)
 	default:
 		usage()
 		os.Exit(2)
@@ -81,7 +106,10 @@ Usage:
   gateway-harness schema
   gateway-harness validate-adapter <adapter.capability.json>
   gateway-harness explain-adapter <adapter.capability.json>
-  gateway-harness adapter-schema`)
+  gateway-harness adapter-schema
+  gateway-harness validate-conformance <fixture.json>
+  gateway-harness explain-conformance <fixture.json>
+  gateway-harness conformance-schema`)
 }
 
 func mustLoadPolicy(path string) policy.Policy {
@@ -116,6 +144,22 @@ func mustLoadAdapterManifest(path string) adapter.Manifest {
 	return m
 }
 
+func mustLoadConformanceFixture(path string) conformance.Fixture {
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "open conformance fixture: %v\n", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	f, err := conformance.Decode(file)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "decode conformance fixture: %v\n", err)
+		os.Exit(1)
+	}
+	return f
+}
+
 func printSummary(p policy.Policy) {
 	summary := policy.Summarize(p)
 	data := map[string]any{
@@ -143,4 +187,19 @@ func printAdapterSummary(m adapter.Manifest) {
 	encoded, _ := json.MarshalIndent(data, "", "  ")
 	fmt.Println(string(encoded))
 	fmt.Printf("- %s hooks=%s actions=%s guards=%s\n", m.Adapter, strings.Join(m.Hooks, ","), strings.Join(m.Actions, ","), strings.Join(m.Guards, ","))
+}
+
+func printConformanceSummary(f conformance.Fixture) {
+	summary := conformance.Summarize(f)
+	data := map[string]any{
+		"name":            summary.Name,
+		"adapter":         summary.Adapter,
+		"request_shape":   summary.RequestShape,
+		"programs":        summary.Programs,
+		"steps":           summary.Steps,
+		"actions":         summary.Actions,
+		"required_guards": summary.RequiredGuards,
+	}
+	encoded, _ := json.MarshalIndent(data, "", "  ")
+	fmt.Println(string(encoded))
 }
