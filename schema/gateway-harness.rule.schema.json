@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Nuctori/gateway-harness/main/schema/gateway-harness.rule.schema.json",
+  "title": "Gateway Harness Normalized Rule",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/rule"
+      },
+      "minItems": 1
+    }
+  },
+  "required": ["rules"],
+  "$defs": {
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "trigger": {
+          "$ref": "#/$defs/trigger"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "operation": {
+          "$ref": "#/$defs/operation"
+        },
+        "audit": {
+          "$ref": "#/$defs/audit"
+        }
+      },
+      "required": ["name", "trigger", "scope", "operation"]
+    },
+    "trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hooks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/hook"
+          },
+          "minItems": 1
+        },
+        "continuity_drop": {
+          "type": "boolean"
+        }
+      },
+      "required": ["hooks"]
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "models": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "model_matches": {
+          "type": "string"
+        }
+      },
+      "required": ["models"]
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "inject_capsule"
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "position": {
+          "type": "string",
+          "enum": ["after_existing_system", "before_messages"]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": ["type", "role", "position", "text"]
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ledger_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "dependentRequired": {
+        "artifact_refs": ["ledger_ref"]
+      }
+    },
+    "hook": {
+      "type": "string",
+      "enum": [
+        "*",
+        "context.continuity_drop.detected",
+        "request.before_model_mapping",
+        "request.before_upstream",
+        "chat.before_model_mapping",
+        "chat.before_upstream",
+        "responses.before_model_mapping",
+        "responses.before_upstream",
+        "responses.compact.before_model_mapping",
+        "responses.compact.before_upstream"
+      ]
+    }
+  }
+}

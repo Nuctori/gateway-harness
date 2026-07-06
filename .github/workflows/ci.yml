@@ -31,6 +31,18 @@ jobs:
 
       - run: ./dist/gateway-harness validate examples/newapi/context-harness.policy.json
 
+      - run: ./dist/gateway-harness validate-rule fixtures/newapi/context-rule.continuity-drop.json
+
+      - run: ./dist/gateway-harness explain-rule fixtures/newapi/context-rule.continuity-drop.json
+
+      - run: ./dist/gateway-harness compile-rule fixtures/newapi/context-rule.continuity-drop.json > /tmp/gateway-harness.compiled-policy.json
+
+      - run: ./dist/gateway-harness validate /tmp/gateway-harness.compiled-policy.json
+
+      - run: '! grep -E "context.truncate|budget|ask_steward" /tmp/gateway-harness.compiled-policy.json'
+
+      - run: ./dist/gateway-harness rule-schema > /tmp/gateway-harness.rule.schema.json
+
       - run: ./dist/gateway-harness dry-run-policy examples/newapi/context-harness.policy.json request.before_upstream fixtures/newapi/policy-dry-run.request.json
 
       - run: ./dist/gateway-harness dry-run-policy examples/newapi/context-harness.policy.json responses.compact.before_upstream fixtures/newapi/policy-dry-run.request.json

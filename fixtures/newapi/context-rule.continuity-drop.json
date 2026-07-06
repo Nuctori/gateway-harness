@@ -1,0 +1,28 @@
+{
+  "version": "0.2",
+  "rules": [
+    {
+      "name": "newapi-continuity-drop-ledger-sentinel",
+      "tags": ["adapter:newapi", "domain:coding"],
+      "trigger": {
+        "hooks": ["context.continuity_drop.detected"],
+        "continuity_drop": true
+      },
+      "scope": {
+        "models": ["*"],
+        "model_matches": "*"
+      },
+      "operation": {
+        "type": "inject_capsule",
+        "role": "system",
+        "position": "after_existing_system",
+        "reason": "project continuity capsule after detected context drop",
+        "text": "Project memory sentinel: preserve explicit user goals, architecture decisions, deployment constraints, current Gateway Harness/NewAPI status, and unresolved tasks after a detected client-side context drop."
+      },
+      "audit": {
+        "ledger_ref": "ledger://project_gateway_harness/session_codex_context_harness",
+        "artifact_refs": ["artifact_continuity_drop_1"]
+      }
+    }
+  ]
+}

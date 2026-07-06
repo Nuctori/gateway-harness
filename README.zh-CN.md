@@ -57,20 +57,25 @@ v0.2 是一个可发布、可 CI 验收的契约版本：
 - Policy apply + replay，用于验证 adapter 风格改写后的真实请求形态。
 - Project/session ledger validation。
 - Project/session ledger query，可按 project、session、tag、event type 做脱敏审计检索。
+- Normalized Rule validation/compile，把 `Trigger + Scope + Operation + Audit` 编译成底层 policy。
 - AI-in-the-loop steward spec validation。
 - AI-in-the-loop steward proposal validation。
 - AI-in-the-loop steward proposal dry-run。
 - JSON Schema。
-- CLI：`validate`、`explain`、`schema`、`dry-run-policy`、`validate-adapter`、`explain-adapter`、`adapter-schema`、`validate-conformance`、`explain-conformance`、`replay-conformance`、`replay-policy-conformance`、`conformance-schema`、`validate-ledger`、`explain-ledger`、`query-ledger`、`append-ledger-record`、`ledger-schema`、`ledger-record-schema`、`validate-steward`、`explain-steward`、`steward-schema`、`validate-steward-proposal`、`explain-steward-proposal`、`steward-proposal-schema`、`dry-run-steward-proposal`。
+- CLI：`validate`、`explain`、`schema`、`validate-rule`、`explain-rule`、`compile-rule`、`rule-schema`、`dry-run-policy`、`validate-adapter`、`explain-adapter`、`adapter-schema`、`validate-conformance`、`explain-conformance`、`replay-conformance`、`replay-policy-conformance`、`conformance-schema`、`validate-ledger`、`explain-ledger`、`query-ledger`、`append-ledger-record`、`ledger-schema`、`ledger-record-schema`、`validate-steward`、`explain-steward`、`steward-schema`、`validate-steward-proposal`、`explain-steward-proposal`、`steward-proposal-schema`、`dry-run-steward-proposal`。
 - NewAPI adapter contract 文档。
 - NewAPI 示例 policy。
 - Release 产物：Linux amd64、Linux arm64、Linux armv7、Windows amd64。
 
-当前内置 action：
+默认推荐的归一化 rule 只有一个 operation：
+
+- `inject_capsule`：注入一段显式上下文。填写 `audit.ledger_ref` 时，会编译成带 Ledger provenance 的注入。
+
+底层 policy action 是编译目标和高级兼容层，不是默认 GUI 心智模型：
 
 - `context.inject`：注入一段上下文。
-- `context.inject_ledger_summary`：注入一段由 adapter 或操作者显式提供的项目/会话 ledger 摘要。
-- `context.truncate`：保留最近若干条上下文，并可保留指定角色。
+- `context.inject_ledger_summary`：本质仍是注入，只是额外携带 `ledger.summary` 来源、`ledger_ref` 和 `artifact_refs`。
+- `context.truncate`：破坏性删除上下文，只适合高级 JSON 显式 opt-in，不属于默认归一化 rule。
 
 当前内置 hook：
 
@@ -101,6 +106,24 @@ gateway-harness explain examples/newapi/context-harness.policy.json
 
 ```bash
 gateway-harness schema
+```
+
+验证一份归一化 rule：
+
+```bash
+gateway-harness validate-rule fixtures/newapi/context-rule.continuity-drop.json
+```
+
+把归一化 rule 编译成底层 policy：
+
+```bash
+gateway-harness compile-rule fixtures/newapi/context-rule.continuity-drop.json
+```
+
+打印 rule schema：
+
+```bash
+gateway-harness rule-schema
 ```
 
 对请求副本 dry-run 一份 policy：
@@ -909,6 +932,7 @@ conformance/              协议 fixture 校验
 ledger/                   项目/会话审计账本校验
 steward/                  AI-in-the-loop 上下文管家契约校验
 policy/                   Policy 类型、校验和摘要
+rule/                     归一化 Rule 类型、校验和 policy 编译
 schema/                   JSON Schema
 docs/                     概念和 adapter 契约
 examples/newapi/          NewAPI adapter 示例 policy
@@ -923,6 +947,7 @@ Gateway Harness 独立发布。
 
 - `gateway-harness` CLI。
 - `gateway-harness.policy.schema.json`。
+- `gateway-harness.rule.schema.json`。
 - `gateway-harness.adapter.schema.json`。
 - `gateway-harness.conformance.schema.json`。
 - `gateway-harness.ledger.schema.json`。

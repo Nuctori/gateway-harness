@@ -11,6 +11,7 @@ It defines:
 
 - **Hook**: when a policy runs, for example `request.before_upstream`.
 - **Action**: what context transformation runs, for example `context.inject`.
+- **Rule**: the normalized operator-facing contract: `Trigger + Scope + Operation + Audit`.
 - **Condition**: whether a step applies to a model, token estimate, tag, or request shape.
 - **Trace**: redacted audit metadata for debugging without leaking prompt content.
 - **Adapter**: host-specific glue for a gateway such as NewAPI.
@@ -20,6 +21,10 @@ It defines:
 - **Ledger Sentinel**: an explicit `context.inject_ledger_summary` action for reinjecting a
   project/session memory summary after compaction without hidden truncation, hidden budgets, or
   implicit AI calls.
+
+The default normalized rule layer exposes one operation today: `inject_capsule`. Ledger provenance is
+audit metadata for that injection, not a separate user-facing mental model. Destructive truncation is
+kept out of the normalized rule layer.
 
 NewAPI is treated as an adapter example, not as the owner of the Gateway Harness concept.
 
@@ -41,6 +46,24 @@ Print the JSON Schema:
 
 ```bash
 gateway-harness schema
+```
+
+Validate a normalized rule:
+
+```bash
+gateway-harness validate-rule fixtures/newapi/context-rule.continuity-drop.json
+```
+
+Compile a normalized rule to the lower-level policy contract:
+
+```bash
+gateway-harness compile-rule fixtures/newapi/context-rule.continuity-drop.json
+```
+
+Print the rule schema:
+
+```bash
+gateway-harness rule-schema
 ```
 
 Dry-run a policy against a request copy:

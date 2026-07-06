@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	"github.com/Nuctori/gateway-harness/rule"
 )
 
 func TestMustWriteJSONFileCreatesParentDirectory(t *testing.T) {
@@ -22,5 +25,29 @@ func TestMustWriteJSONFileCreatesParentDirectory(t *testing.T) {
 	}
 	if got["status"] != "ok" {
 		t.Fatalf("unexpected json: %+v", got)
+	}
+}
+
+func TestCompileRuleFixture(t *testing.T) {
+	r := mustLoadRuleDocument("../../fixtures/newapi/context-rule.continuity-drop.json")
+
+	compiled, err := rule.Compile(r)
+	if err != nil {
+		t.Fatalf("compile rule: %v", err)
+	}
+	if len(compiled.Programs) != 1 {
+		t.Fatalf("unexpected compiled policy: %+v", compiled)
+	}
+	action := compiled.Programs[0].Steps[0].Do[0]
+	if action.Action != "context.inject_ledger_summary" {
+		t.Fatalf("unexpected compiled action: %+v", action)
+	}
+
+	encoded, err := json.Marshal(compiled)
+	if err != nil {
+		t.Fatalf("marshal compiled policy: %v", err)
+	}
+	if strings.Contains(string(encoded), "context.truncate") || strings.Contains(string(encoded), "budget") || strings.Contains(string(encoded), "ask_steward") {
+		t.Fatalf("compiled rule introduced non-normalized behavior: %s", encoded)
 	}
 }

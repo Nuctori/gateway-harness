@@ -14,6 +14,7 @@ import (
 	"github.com/Nuctori/gateway-harness/conformance"
 	"github.com/Nuctori/gateway-harness/ledger"
 	"github.com/Nuctori/gateway-harness/policy"
+	"github.com/Nuctori/gateway-harness/rule"
 	"github.com/Nuctori/gateway-harness/schema"
 	"github.com/Nuctori/gateway-harness/steward"
 )
@@ -49,6 +50,42 @@ func main() {
 		printSummary(p)
 	case "schema":
 		fmt.Print(schema.PolicyJSON)
+	case "validate-rule":
+		if len(os.Args) != 3 {
+			usage()
+			os.Exit(2)
+		}
+		r := mustLoadRuleDocument(os.Args[2])
+		if err := rule.Validate(r); err != nil {
+			fmt.Fprintf(os.Stderr, "invalid rule document: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("rule document ok")
+	case "explain-rule":
+		if len(os.Args) != 3 {
+			usage()
+			os.Exit(2)
+		}
+		r := mustLoadRuleDocument(os.Args[2])
+		if err := rule.Validate(r); err != nil {
+			fmt.Fprintf(os.Stderr, "invalid rule document: %v\n", err)
+			os.Exit(1)
+		}
+		printRuleSummary(r)
+	case "compile-rule":
+		if len(os.Args) != 3 {
+			usage()
+			os.Exit(2)
+		}
+		r := mustLoadRuleDocument(os.Args[2])
+		compiled, err := rule.Compile(r)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "compile rule failed: %v\n", err)
+			os.Exit(1)
+		}
+		printJSON(compiled)
+	case "rule-schema":
+		fmt.Print(schema.RuleJSON)
 	case "dry-run-policy":
 		if len(os.Args) != 5 && len(os.Args) != 6 {
 			usage()
@@ -275,6 +312,10 @@ Usage:
   gateway-harness validate <policy.json>
   gateway-harness explain <policy.json>
   gateway-harness schema
+  gateway-harness validate-rule <rule.json>
+  gateway-harness explain-rule <rule.json>
+  gateway-harness compile-rule <rule.json>
+  gateway-harness rule-schema
   gateway-harness dry-run-policy <policy.json> <hook> <request.json> [estimated_tokens]
   gateway-harness validate-adapter <adapter.capability.json>
   gateway-harness explain-adapter <adapter.capability.json>
@@ -313,6 +354,22 @@ func mustLoadPolicy(path string) policy.Policy {
 		os.Exit(1)
 	}
 	return p
+}
+
+func mustLoadRuleDocument(path string) rule.Document {
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "open rule document: %v\n", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	r, err := rule.Decode(file)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "decode rule document: %v\n", err)
+		os.Exit(1)
+	}
+	return r
 }
 
 func mustLoadAdapterManifest(path string) adapter.Manifest {
@@ -534,6 +591,20 @@ func printSummary(p policy.Policy) {
 	fmt.Println(string(encoded))
 	for _, program := range p.Programs {
 		fmt.Printf("- %s models=%s tags=%s steps=%d\n", program.Name, strings.Join(program.Models, ","), strings.Join(program.Tags, ","), len(program.Steps))
+	}
+}
+
+func printRuleSummary(r rule.Document) {
+	summary := rule.Summarize(r)
+	data := map[string]any{
+		"rules":      summary.Rules,
+		"hooks":      summary.Hooks,
+		"operations": summary.Operations,
+	}
+	encoded, _ := json.MarshalIndent(data, "", "  ")
+	fmt.Println(string(encoded))
+	for _, item := range r.Rules {
+		fmt.Printf("- %s models=%s operation=%s audit=%t\n", item.Name, strings.Join(item.Scope.Models, ","), item.Operation.Type, item.Audit.LedgerRef != "")
 	}
 }
 

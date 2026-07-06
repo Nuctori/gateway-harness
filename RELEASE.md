@@ -64,6 +64,24 @@ contract for realistic adapter flows.
 - Extends the NewAPI example policy, adapter capability manifest, CI dry-run path, and docs for
   the continuity-drop ledger sentinel.
 
+## v0.2.7 Scope
+
+- Adds `append-ledger-record` for appending explicit, redacted project/session ledger records.
+- Adds `ledger-record-schema`.
+- Ensures nested ledger parent directories are created during atomic ledger writes.
+
+## v0.2.8 Scope
+
+- Adds the normalized Rule contract: `Rule = Trigger + Scope + Operation + Audit`.
+- Keeps the default rule operation intentionally narrow: `inject_capsule` only.
+- Compiles `inject_capsule` without audit to `context.inject`, and with `audit.ledger_ref` to
+  `context.inject_ledger_summary` as a lower-level provenance encoding.
+- Keeps destructive `context.truncate`, hidden budgets, and implicit AI calls out of the normalized
+  rule layer.
+- Adds `validate-rule`, `explain-rule`, `compile-rule`, and `rule-schema` CLI commands.
+- Adds the NewAPI continuity-drop normalized rule fixture and CI coverage that validates the
+  compiled policy does not contain `context.truncate`, `budget`, or `ask_steward`.
+
 ## v0.1.x Scope
 
 - Policy structs and validation.
