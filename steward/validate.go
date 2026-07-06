@@ -11,12 +11,11 @@ import (
 )
 
 const (
-	GuardExplicitInvocationOnly      = "explicit_invocation_only"
-	GuardStructuredOutputOnly        = "structured_output_only"
-	GuardValidateOutputActions       = "validate_output_actions"
-	GuardRedactedInputOnly           = "redacted_input_only"
-	GuardArtifactHashRequired        = "artifact_hash_required"
-	GuardHumanApprovalForPolicyPatch = "human_approval_for_policy_patch"
+	GuardExplicitInvocationOnly = "explicit_invocation_only"
+	GuardStructuredOutputOnly   = "structured_output_only"
+	GuardValidateOutputActions  = "validate_output_actions"
+	GuardRedactedInputOnly      = "redacted_input_only"
+	GuardArtifactHashRequired   = "artifact_hash_required"
 )
 
 var SupportedInputs = map[string]bool{
@@ -32,20 +31,17 @@ var SupportedInputs = map[string]bool{
 
 var SupportedOutputActions = map[string]bool{
 	"context.inject":         true,
-	"context.truncate":       true,
 	"diagnosis.note.create":  true,
 	"ledger.artifact.create": true,
-	"policy.patch.propose":   true,
 	"session.tags.update":    true,
 }
 
 var SupportedGuards = map[string]bool{
-	GuardExplicitInvocationOnly:      true,
-	GuardStructuredOutputOnly:        true,
-	GuardValidateOutputActions:       true,
-	GuardRedactedInputOnly:           true,
-	GuardArtifactHashRequired:        true,
-	GuardHumanApprovalForPolicyPatch: true,
+	GuardExplicitInvocationOnly: true,
+	GuardStructuredOutputOnly:   true,
+	GuardValidateOutputActions:  true,
+	GuardRedactedInputOnly:      true,
+	GuardArtifactHashRequired:   true,
 }
 
 func Decode(r io.Reader) (Spec, error) {
@@ -165,9 +161,6 @@ func requireGuards(s Spec) error {
 	if len(s.ArtifactTypes) > 0 && !contains(s.AllowedActions, "ledger.artifact.create") {
 		return fmt.Errorf("artifact_types require allowed action %q", "ledger.artifact.create")
 	}
-	if contains(s.AllowedActions, "policy.patch.propose") && !contains(s.RequiredGuards, GuardHumanApprovalForPolicyPatch) {
-		return fmt.Errorf("policy.patch.propose requires guard %q", GuardHumanApprovalForPolicyPatch)
-	}
 	return nil
 }
 
@@ -221,17 +214,12 @@ func validateProposalOutput(s Spec, hook string, output Output) error {
 	}
 	switch output.Action {
 	case "context.inject":
-		if err := rejectFields(output, "strategy", "keep_last_messages", "preserve_roles", "artifact_type", "content_hash", "ref", "patch_hash", "description", "tags", "severity", "note_hash"); err != nil {
-			return err
-		}
-		return validateProposalPolicyAction(hook, output)
-	case "context.truncate":
-		if err := rejectFields(output, "role", "position", "text", "artifact_type", "content_hash", "ref", "patch_hash", "description", "tags", "severity", "note_hash"); err != nil {
+		if err := rejectFields(output, "artifact_type", "content_hash", "ref", "tags", "severity", "note_hash"); err != nil {
 			return err
 		}
 		return validateProposalPolicyAction(hook, output)
 	case "ledger.artifact.create":
-		if err := rejectFields(output, "role", "position", "text", "strategy", "keep_last_messages", "preserve_roles", "patch_hash", "description", "tags", "severity", "note_hash"); err != nil {
+		if err := rejectFields(output, "role", "position", "text", "tags", "severity", "note_hash"); err != nil {
 			return err
 		}
 		if !contains(s.ArtifactTypes, output.ArtifactType) {
@@ -243,21 +231,8 @@ func validateProposalOutput(s Spec, hook string, output Output) error {
 		if strings.TrimSpace(output.Ref) == "" {
 			return fmt.Errorf("ledger.artifact.create ref is required")
 		}
-	case "policy.patch.propose":
-		if err := rejectFields(output, "role", "position", "text", "strategy", "keep_last_messages", "preserve_roles", "artifact_type", "content_hash", "tags", "severity", "note_hash"); err != nil {
-			return err
-		}
-		if strings.TrimSpace(output.PatchHash) == "" {
-			return fmt.Errorf("policy.patch.propose patch_hash is required")
-		}
-		if strings.TrimSpace(output.Ref) == "" {
-			return fmt.Errorf("policy.patch.propose ref is required")
-		}
-		if strings.TrimSpace(output.Description) == "" {
-			return fmt.Errorf("policy.patch.propose description is required")
-		}
 	case "diagnosis.note.create":
-		if err := rejectFields(output, "role", "position", "text", "strategy", "keep_last_messages", "preserve_roles", "artifact_type", "content_hash", "patch_hash", "description", "tags"); err != nil {
+		if err := rejectFields(output, "role", "position", "text", "artifact_type", "content_hash", "tags"); err != nil {
 			return err
 		}
 		if strings.TrimSpace(output.NoteHash) == "" {
@@ -270,7 +245,7 @@ func validateProposalOutput(s Spec, hook string, output Output) error {
 			return fmt.Errorf("diagnosis.note.create severity is required")
 		}
 	case "session.tags.update":
-		if err := rejectFields(output, "role", "position", "text", "strategy", "keep_last_messages", "preserve_roles", "artifact_type", "content_hash", "ref", "patch_hash", "description", "severity", "note_hash"); err != nil {
+		if err := rejectFields(output, "role", "position", "text", "artifact_type", "content_hash", "ref", "severity", "note_hash"); err != nil {
 			return err
 		}
 		return validateNonEmptyUnique("tag", output.Tags)
@@ -282,16 +257,11 @@ func validateProposalOutput(s Spec, hook string, output Output) error {
 
 func validateProposalPolicyAction(hook string, output Output) error {
 	action := policy.Action{
-		Action:        output.Action,
-		Role:          output.Role,
-		Position:      output.Position,
-		Text:          output.Text,
-		Strategy:      output.Strategy,
-		PreserveRoles: output.PreserveRoles,
-		Reason:        output.Reason,
-	}
-	if output.KeepLastMessages != 0 {
-		action.KeepLastMessages = &output.KeepLastMessages
+		Action:   output.Action,
+		Role:     output.Role,
+		Position: output.Position,
+		Text:     output.Text,
+		Reason:   output.Reason,
 	}
 	return policy.Validate(policy.Policy{Programs: []policy.Program{{
 		Name:   "steward-proposal",
@@ -317,22 +287,12 @@ func outputFieldSet(output Output, name string) bool {
 		return strings.TrimSpace(output.Position) != ""
 	case "text":
 		return strings.TrimSpace(output.Text) != ""
-	case "strategy":
-		return strings.TrimSpace(output.Strategy) != ""
-	case "keep_last_messages":
-		return output.KeepLastMessages != 0
-	case "preserve_roles":
-		return len(output.PreserveRoles) > 0
 	case "artifact_type":
 		return strings.TrimSpace(output.ArtifactType) != ""
 	case "content_hash":
 		return strings.TrimSpace(output.ContentHash) != ""
 	case "ref":
 		return strings.TrimSpace(output.Ref) != ""
-	case "patch_hash":
-		return strings.TrimSpace(output.PatchHash) != ""
-	case "description":
-		return strings.TrimSpace(output.Description) != ""
 	case "tags":
 		return len(output.Tags) > 0
 	case "severity":

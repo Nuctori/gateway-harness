@@ -135,10 +135,17 @@ Stewards are for cases such as:
 - compact-time summaries
 - stuck-session diagnosis
 - failover context repair
-- policy patch proposals
+- session tagging for later audit
 
 Stewards must not be implicit gateway behavior. A valid steward spec must declare explicit hooks, a
 steward model, redacted inputs, allowed output actions, artifact types, and required guards.
+
+Gateway Harness does not implement an agent framework itself. At runtime, `run-steward` explicitly
+invokes an external open-source agent runner, passes a validated redacted event to stdin, and
+validates the proposal returned on stdout. The event must use only inputs declared by the steward
+spec and must not contain reserved raw-content keys such as `prompt`, `messages`, `content`, `input`,
+or `output`. The recommended example runner uses Hugging Face `smolagents`, but the core contract
+only depends on JSON over stdin/stdout.
 
 Required safety boundaries:
 
@@ -146,8 +153,8 @@ Required safety boundaries:
 - no raw transcript inputs
 - structured outputs only
 - output actions must be validated before application
-- policy patch proposals require human approval
 - artifacts must be referenced by hash
+- no gateway-side human approval workflow
 
 ## Steward Proposal
 
@@ -161,7 +168,8 @@ Proposal outputs are action-shaped records, not free-form transcripts. For examp
 
 - `context.inject` must include role, position, and text.
 - `ledger.artifact.create` must include artifact type, content hash, and reference.
-- `policy.patch.propose` must include patch hash, reference, and description.
+- `diagnosis.note.create` must include note hash, reference, and severity.
+- `session.tags.update` must include at least one tag.
 
 Dry-run prints a redacted patch plan for non-destructive outputs. It must not print the full
 rewritten request, contact an upstream, write persistent state, call an AI, or perform destructive

@@ -14,7 +14,7 @@
         "type": "ask_steward",
         "steward_model": "kimi-for-coding",
         "inputs": ["user_goal", "session_tags", "ledger_event_metadata", "artifact_refs", "redacted_trace"],
-        "allowed_actions": ["context.inject", "ledger.artifact.create", "diagnosis.note.create"],
+        "allowed_actions": ["context.inject", "ledger.artifact.create", "diagnosis.note.create", "session.tags.update"],
         "artifact_types": ["compact_summary"],
         "required_guards": [
           "explicit_invocation_only",

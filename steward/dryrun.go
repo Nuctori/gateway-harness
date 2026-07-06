@@ -30,20 +30,11 @@ func DryRunProposal(s Spec, p Proposal, request []byte) (DryRunResult, error) {
 			}
 			result.RequestPatches = append(result.RequestPatches, patch)
 			result.AppliedActions = append(result.AppliedActions, output.Action)
-		case "context.truncate":
-			return DryRunResult{}, fmt.Errorf("context.truncate dry-run is intentionally unsupported; use an explicit adapter conformance fixture for destructive context edits")
 		case "ledger.artifact.create":
 			result.Artifacts = append(result.Artifacts, DryRunRef{
 				Type:        output.ArtifactType,
 				ContentHash: output.ContentHash,
 				Ref:         output.Ref,
-			})
-			result.AppliedActions = append(result.AppliedActions, output.Action)
-		case "policy.patch.propose":
-			result.PolicyPatches = append(result.PolicyPatches, DryRunRef{
-				PatchHash:   output.PatchHash,
-				Ref:         output.Ref,
-				Description: output.Description,
 			})
 			result.AppliedActions = append(result.AppliedActions, output.Action)
 		case "diagnosis.note.create":

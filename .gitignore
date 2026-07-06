@@ -2,6 +2,7 @@ bin/
 dist/
 output/
 coverage/
+.codegraph/
 *.exe
 *.test
 *.out

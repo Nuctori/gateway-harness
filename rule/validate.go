@@ -127,9 +127,6 @@ func validateAskStewardOperation(operation Operation, trigger Trigger) error {
 	if containsString(operation.AllowedActions, "context.truncate") {
 		return fmt.Errorf("ask_steward does not support context.truncate in normalized rules")
 	}
-	if containsString(operation.RequiredGuards, steward.GuardHumanApprovalForPolicyPatch) {
-		return fmt.Errorf("ask_steward does not support guard %q in normalized rules", steward.GuardHumanApprovalForPolicyPatch)
-	}
 	spec := steward.Spec{
 		Name:           firstNonEmpty(operation.StewardName, "rule-steward"),
 		StewardModel:   operation.StewardModel,

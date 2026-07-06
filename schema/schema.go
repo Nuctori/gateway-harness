@@ -23,5 +23,8 @@ var LedgerRecordJSON string
 //go:embed gateway-harness.steward.schema.json
 var StewardJSON string
 
+//go:embed gateway-harness.steward-event.schema.json
+var StewardEventJSON string
+
 //go:embed gateway-harness.steward-proposal.schema.json
 var StewardProposalJSON string

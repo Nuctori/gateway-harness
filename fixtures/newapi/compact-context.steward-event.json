@@ -1,0 +1,21 @@
+{
+  "hook": "responses.compact.before_upstream",
+  "redacted": true,
+  "inputs": {
+    "user_goal": "continue the active Gateway Harness implementation without losing explicit constraints",
+    "session_tags": ["project:gateway-harness", "adapter:newapi"],
+    "ledger_event_metadata": [
+      {
+        "event_type": "compact",
+        "tags": ["continuity:drop", "source:redacted"]
+      }
+    ],
+    "artifact_refs": ["memory://summaries/session_codex_context_harness/compact_steward_1"],
+    "redacted_trace": [
+      {
+        "role": "user",
+        "content_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ]
+  }
+}

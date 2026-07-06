@@ -19,11 +19,16 @@
       "text": "Continue preserving the user's active goal, current blockers, verified decisions, and unresolved follow-ups from the compact summary artifact."
     },
     {
-      "action": "policy.patch.propose",
-      "reason": "propose a reviewed policy update instead of silently changing runtime behavior",
-      "patch_hash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
-      "ref": "git://proposals/context-steward-policy.patch",
-      "description": "Add compact-time context stewarding for coding sessions after human review."
+      "action": "diagnosis.note.create",
+      "reason": "record why the compact steward injected continuity guidance",
+      "note_hash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "ref": "memory://diagnostics/session_codex_context_harness/compact_steward_1",
+      "severity": "info"
+    },
+    {
+      "action": "session.tags.update",
+      "reason": "mark the session as compact-stewarded for later audit",
+      "tags": ["continuity:compacted", "steward:ai-in-loop"]
     }
   ]
 }

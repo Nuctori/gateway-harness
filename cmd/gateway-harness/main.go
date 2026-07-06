@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Nuctori/gateway-harness/adapter"
 	"github.com/Nuctori/gateway-harness/conformance"
@@ -216,6 +217,36 @@ func main() {
 		printStewardSummary(s)
 	case "steward-schema":
 		fmt.Print(schema.StewardJSON)
+	case "steward-event-schema":
+		fmt.Print(schema.StewardEventJSON)
+	case "validate-steward-event":
+		if len(os.Args) != 4 {
+			usage()
+			os.Exit(2)
+		}
+		s := mustLoadStewardSpec(os.Args[2])
+		event, _ := mustLoadStewardEvent(os.Args[3])
+		if err := steward.ValidateEvent(s, event); err != nil {
+			fmt.Fprintf(os.Stderr, "invalid steward event: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("steward event ok")
+	case "run-steward":
+		separator := findArg(os.Args, "--")
+		if len(os.Args) < 6 || separator != 4 || separator == len(os.Args)-1 {
+			usage()
+			os.Exit(2)
+		}
+		s := mustLoadStewardSpec(os.Args[2])
+		event, rawEvent := mustLoadStewardEvent(os.Args[3])
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		proposal, err := steward.RunExternalAgent(ctx, s, event, rawEvent, os.Args[separator+1], os.Args[separator+2:]...)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "run steward failed: %v\n", err)
+			os.Exit(1)
+		}
+		printJSON(proposal)
 	case "validate-steward-proposal":
 		if len(os.Args) != 4 {
 			usage()
@@ -347,6 +378,9 @@ Usage:
   gateway-harness validate-steward <steward.json>
   gateway-harness explain-steward <steward.json>
   gateway-harness steward-schema
+  gateway-harness steward-event-schema
+  gateway-harness validate-steward-event <steward.json> <event.json>
+  gateway-harness run-steward <steward.json> <event.json> -- <agent-command> [args...]
   gateway-harness validate-steward-proposal <steward.json> <proposal.json>
   gateway-harness explain-steward-proposal <steward.json> <proposal.json>
   gateway-harness steward-proposal-schema
@@ -530,6 +564,22 @@ func mustLoadStewardSpec(path string) steward.Spec {
 	return s
 }
 
+func mustLoadStewardEvent(path string) (steward.Event, []byte) {
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "open steward event: %v\n", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	e, raw, err := steward.DecodeEvent(file)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "decode steward event: %v\n", err)
+		os.Exit(1)
+	}
+	return e, raw
+}
+
 func mustLoadStewardProposal(path string) steward.Proposal {
 	file, err := os.Open(path)
 	if err != nil {
@@ -680,6 +730,15 @@ func printPolicyReplayResult(result conformance.PolicyReplayResult) {
 func printJSON(value any) {
 	encoded, _ := json.MarshalIndent(value, "", "  ")
 	fmt.Println(string(encoded))
+}
+
+func findArg(args []string, want string) int {
+	for i, arg := range args {
+		if arg == want {
+			return i
+		}
+	}
+	return -1
 }
 
 func printLedgerSummary(l ledger.Ledger) {

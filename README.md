@@ -32,6 +32,13 @@ Ledger provenance is audit metadata for injection, not a separate user-facing me
 normalized AI steward path is intentionally non-destructive: no `context.truncate`, no
 `policy.patch.propose`, and no fake gateway-side human-approval workflow.
 
+Runtime AI-in-the-loop stays explicit and thin. Gateway Harness does not embed an agent framework or
+provider; `run-steward` invokes an external open-source agent runner, passes a validated redacted
+event JSON to stdin, and validates the proposal JSON returned on stdout. The event must use only
+inputs declared by the steward spec and must not contain reserved raw-content keys such as
+`prompt`, `messages`, `content`, `input`, or `output`. See `examples/smolagents/` for the recommended
+lightweight runner pattern.
+
 NewAPI is treated as an adapter example, not as the owner of the Gateway Harness concept.
 
 ## CLI
@@ -70,6 +77,15 @@ Compile a normalized AI-in-the-loop rule to steward specs:
 
 ```bash
 gateway-harness compile-rule-stewards fixtures/newapi/context-rule.ask-steward.json
+```
+
+Invoke an external steward runner:
+
+```bash
+gateway-harness run-steward \
+  fixtures/newapi/compact-context.steward.json \
+  fixtures/newapi/compact-context.steward-event.json \
+  -- python examples/smolagents/compact_steward.py
 ```
 
 Print the rule schema:

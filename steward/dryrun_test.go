@@ -31,26 +31,21 @@ func TestDryRunProposalInjectsIntoResponsesInput(t *testing.T) {
 	if len(result.Artifacts) != 1 || result.Artifacts[0].Type != "compact_summary" {
 		t.Fatalf("unexpected artifacts: %+v", result.Artifacts)
 	}
-	if len(result.PolicyPatches) != 1 || result.PolicyPatches[0].PatchHash == "" {
-		t.Fatalf("unexpected policy patches: %+v", result.PolicyPatches)
+	if len(result.Diagnostics) != 1 || result.Diagnostics[0].NoteHash == "" {
+		t.Fatalf("unexpected diagnostics: %+v", result.Diagnostics)
+	}
+	if len(result.SessionTags) != 2 {
+		t.Fatalf("unexpected session tags: %+v", result.SessionTags)
 	}
 }
 
 func TestDryRunProposalRejectsTruncate(t *testing.T) {
-	s, err := Decode(strings.NewReader(strings.Replace(compactStewardJSON, `"context.inject", `, `"context.truncate", `, 1)))
+	s, err := Decode(strings.NewReader(strings.Replace(compactStewardJSON, `"context.inject"`, `"context.truncate"`, 1)))
 	if err != nil {
 		t.Fatalf("decode spec: %v", err)
 	}
-	raw := strings.Replace(compactStewardProposalJSON, `"context.inject"`, `"context.truncate"`, 1)
-	raw = strings.Replace(raw, `"role": "system",
-      "position": "after_existing_system",
-      "text": "Continue preserving the user's active goal, current blockers, verified decisions, and unresolved follow-ups from the compact summary artifact."`, `"keep_last_messages": 12`, 1)
-	p, err := DecodeProposal(strings.NewReader(raw))
-	if err != nil {
-		t.Fatalf("decode proposal: %v", err)
-	}
-	if _, err := DryRunProposal(s, p, []byte(compactRequestJSON)); err == nil {
-		t.Fatal("expected dry-run truncate rejection")
+	if err := Validate(s); err == nil {
+		t.Fatal("expected truncate rejection at steward validation")
 	}
 }
 

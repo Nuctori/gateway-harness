@@ -103,6 +103,17 @@ jobs:
 
       - run: ./dist/gateway-harness steward-schema > /tmp/gateway-harness.steward.schema.json
 
+      - run: ./dist/gateway-harness steward-event-schema > /tmp/gateway-harness.steward-event.schema.json
+
+      - run: ./dist/gateway-harness validate-steward-event fixtures/newapi/compact-context.steward.json fixtures/newapi/compact-context.steward-event.json
+
+      - run: |
+          ./dist/gateway-harness run-steward \
+            fixtures/newapi/compact-context.steward.json \
+            fixtures/newapi/compact-context.steward-event.json \
+            -- python3 -c 'import pathlib; print(pathlib.Path("fixtures/newapi/compact-context.steward-proposal.json").read_text())' \
+            > /tmp/gateway-harness.steward-proposal.from-agent.json
+
       - run: ./dist/gateway-harness validate-steward-proposal fixtures/newapi/compact-context.steward.json fixtures/newapi/compact-context.steward-proposal.json
 
       - run: ./dist/gateway-harness explain-steward-proposal fixtures/newapi/compact-context.steward.json fixtures/newapi/compact-context.steward-proposal.json

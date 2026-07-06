@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Nuctori/gateway-harness/main/schema/gateway-harness.steward-event.schema.json",
+  "title": "Gateway Harness AI Steward Event",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "hook": {
+      "$ref": "gateway-harness.steward.schema.json#/$defs/explicitHook"
+    },
+    "redacted": {
+      "const": true
+    },
+    "inputs": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "$ref": "gateway-harness.steward.schema.json#/$defs/input"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/redactedValue"
+      }
+    }
+  },
+  "required": ["hook", "redacted", "inputs"],
+  "$defs": {
+    "redactedValue": {
+      "anyOf": [
+        {
+          "type": ["string", "number", "integer", "boolean", "null"]
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/redactedValue"
+          }
+        },
+        {
+          "type": "object",
+          "not": {
+            "anyOf": [
+              { "required": ["content"] },
+              { "required": ["conversation"] },
+              { "required": ["full_text"] },
+              { "required": ["input"] },
+              { "required": ["message"] },
+              { "required": ["messages"] },
+              { "required": ["output"] },
+              { "required": ["prompt"] },
+              { "required": ["raw_content"] },
+              { "required": ["raw_input"] },
+              { "required": ["raw_output"] },
+              { "required": ["raw_prompt"] },
+              { "required": ["raw_response"] },
+              { "required": ["raw_transcript"] },
+              { "required": ["response"] },
+              { "required": ["transcript"] }
+            ]
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/redactedValue"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -85,11 +85,16 @@ contract for realistic adapter flows.
 ## v0.2.9 Scope
 
 - Adds normalized `ask_steward` rules that compile to explicit steward specs.
-- Keeps steward compilation non-executing: Gateway Harness does not call AI, mutate requests, or
-  read raw prompts.
+- Keeps steward compilation non-executing: compiling rules does not call AI, mutate requests, or read
+  raw prompts.
+- Adds `run-steward` for explicit AI-in-the-loop execution through an external open-source agent
+  runner. The runner receives a redacted event on stdin and must return a steward proposal on stdout.
+- Adds steward event validation and schema coverage so external agent inputs must use declared
+  steward inputs and cannot carry reserved raw-content keys.
 - Rejects `context.truncate`, `policy.patch.propose`, and `human_approval_for_policy_patch` in the
-  normalized steward path. The gateway does not pretend to own a human approval workflow.
-- Adds `compile-rule-stewards` and a NewAPI compact steward rule fixture.
+  steward path. The gateway does not pretend to own a human approval workflow.
+- Adds `compile-rule-stewards`, a NewAPI compact steward rule fixture, and a smolagents runner
+  example.
 
 ## v0.1.x Scope
 

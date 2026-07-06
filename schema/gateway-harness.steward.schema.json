@@ -101,26 +101,6 @@
       }
     },
     {
-      "if": {
-        "properties": {
-          "allowed_actions": {
-            "contains": {
-              "const": "policy.patch.propose"
-            }
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "required_guards": {
-            "contains": {
-              "const": "human_approval_for_policy_patch"
-            }
-          }
-        }
-      }
-    },
-    {
       "properties": {
         "required_guards": {
           "allOf": [
@@ -181,10 +161,8 @@
       "type": "string",
       "enum": [
         "context.inject",
-        "context.truncate",
         "diagnosis.note.create",
         "ledger.artifact.create",
-        "policy.patch.propose",
         "session.tags.update"
       ]
     },
@@ -199,8 +177,7 @@
         "structured_output_only",
         "validate_output_actions",
         "redacted_input_only",
-        "artifact_hash_required",
-        "human_approval_for_policy_patch"
+        "artifact_hash_required"
       ]
     }
   }

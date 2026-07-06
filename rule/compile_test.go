@@ -149,7 +149,7 @@ func TestAskStewardRejectsMissingRedactedInputGuard(t *testing.T) {
 func TestAskStewardRejectsPolicyPatchApprovalWorkflow(t *testing.T) {
 	raw := strings.Replace(
 		askStewardRuleJSON,
-		`"context.inject", "ledger.artifact.create", "diagnosis.note.create"`,
+		`"context.inject", "ledger.artifact.create", "diagnosis.note.create", "session.tags.update"`,
 		`"context.inject", "ledger.artifact.create", "policy.patch.propose"`,
 		1,
 	)
@@ -173,7 +173,7 @@ func TestAskStewardRejectsPolicyPatchApprovalWorkflow(t *testing.T) {
 func TestAskStewardRejectsTruncate(t *testing.T) {
 	raw := strings.Replace(
 		askStewardRuleJSON,
-		`"context.inject", "ledger.artifact.create", "diagnosis.note.create"`,
+		`"context.inject", "ledger.artifact.create", "diagnosis.note.create", "session.tags.update"`,
 		`"context.inject", "context.truncate", "ledger.artifact.create"`,
 		1,
 	)
@@ -253,7 +253,7 @@ const askStewardRuleJSON = `{
         "steward_name": "codex-compact-steward",
         "steward_model": "kimi-for-coding",
         "inputs": ["user_goal", "session_tags", "ledger_event_metadata", "artifact_refs", "redacted_trace"],
-		"allowed_actions": ["context.inject", "ledger.artifact.create", "diagnosis.note.create"],
+		"allowed_actions": ["context.inject", "ledger.artifact.create", "diagnosis.note.create", "session.tags.update"],
 		"artifact_types": ["compact_summary"],
 		"required_guards": [
 		  "explicit_invocation_only",

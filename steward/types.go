@@ -29,22 +29,17 @@ type Proposal struct {
 }
 
 type Output struct {
-	Action           string   `json:"action"`
-	Reason           string   `json:"reason,omitempty"`
-	Role             string   `json:"role,omitempty"`
-	Position         string   `json:"position,omitempty"`
-	Text             string   `json:"text,omitempty"`
-	Strategy         string   `json:"strategy,omitempty"`
-	KeepLastMessages int      `json:"keep_last_messages,omitempty"`
-	PreserveRoles    []string `json:"preserve_roles,omitempty"`
-	ArtifactType     string   `json:"artifact_type,omitempty"`
-	ContentHash      string   `json:"content_hash,omitempty"`
-	Ref              string   `json:"ref,omitempty"`
-	PatchHash        string   `json:"patch_hash,omitempty"`
-	Description      string   `json:"description,omitempty"`
-	Tags             []string `json:"tags,omitempty"`
-	Severity         string   `json:"severity,omitempty"`
-	NoteHash         string   `json:"note_hash,omitempty"`
+	Action       string   `json:"action"`
+	Reason       string   `json:"reason,omitempty"`
+	Role         string   `json:"role,omitempty"`
+	Position     string   `json:"position,omitempty"`
+	Text         string   `json:"text,omitempty"`
+	ArtifactType string   `json:"artifact_type,omitempty"`
+	ContentHash  string   `json:"content_hash,omitempty"`
+	Ref          string   `json:"ref,omitempty"`
+	Tags         []string `json:"tags,omitempty"`
+	Severity     string   `json:"severity,omitempty"`
+	NoteHash     string   `json:"note_hash,omitempty"`
 }
 
 type ProposalSummary struct {
@@ -61,7 +56,6 @@ type DryRunResult struct {
 	AppliedActions []string      `json:"applied_actions"`
 	RequestPatches []DryRunPatch `json:"request_patches,omitempty"`
 	Artifacts      []DryRunRef   `json:"artifacts,omitempty"`
-	PolicyPatches  []DryRunRef   `json:"policy_patches,omitempty"`
 	Diagnostics    []DryRunRef   `json:"diagnostics,omitempty"`
 	SessionTags    []string      `json:"session_tags,omitempty"`
 }
@@ -69,10 +63,8 @@ type DryRunResult struct {
 type DryRunRef struct {
 	Type        string `json:"type,omitempty"`
 	ContentHash string `json:"content_hash,omitempty"`
-	PatchHash   string `json:"patch_hash,omitempty"`
 	NoteHash    string `json:"note_hash,omitempty"`
 	Ref         string `json:"ref"`
-	Description string `json:"description,omitempty"`
 	Severity    string `json:"severity,omitempty"`
 }
 

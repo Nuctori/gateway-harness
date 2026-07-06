@@ -4,14 +4,13 @@
   "steward_model": "kimi-for-coding",
   "hooks": ["responses.compact.before_upstream"],
   "inputs": ["user_goal", "session_tags", "ledger_event_metadata", "artifact_refs", "redacted_trace"],
-  "allowed_actions": ["context.inject", "ledger.artifact.create", "policy.patch.propose"],
+  "allowed_actions": ["context.inject", "ledger.artifact.create", "diagnosis.note.create", "session.tags.update"],
   "artifact_types": ["compact_summary"],
   "required_guards": [
     "explicit_invocation_only",
     "structured_output_only",
     "validate_output_actions",
     "redacted_input_only",
-    "artifact_hash_required",
-    "human_approval_for_policy_patch"
+    "artifact_hash_required"
   ]
 }
