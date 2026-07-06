@@ -15,6 +15,16 @@ Validate the adapter capability manifest:
 gateway-harness validate-adapter examples/newapi/adapter.capability.json
 ```
 
+Run online acceptance on a deployed NewAPI host after installing the `gateway-harness` CLI:
+
+```bash
+sh examples/newapi/online-acceptance.sh
+```
+
+The script validates the live `context_harness.policy`, checks that ledger-summary injection is
+explicit, rejects hidden `budget` / `context.truncate` policy fields, verifies model failover options,
+checks NewAPI HTTP health, and ensures the NewAPI container is not publishing port 80.
+
 NewAPI adapter responsibilities:
 
 - Map NewAPI relay phases to Gateway Harness hooks.

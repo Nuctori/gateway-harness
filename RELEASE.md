@@ -18,6 +18,13 @@ contract for realistic adapter flows.
 - CI coverage for NewAPI example policy, adapter capability, conformance replay, ledger query,
   steward specs, and steward proposals.
 
+## v0.2.1 Scope
+
+- Adds the NewAPI online acceptance script packaged with examples.
+- The script validates a deployed NewAPI host without taking over port 80: live policy export,
+  Gateway Harness policy validation, ledger-summary hook coverage, hidden budget/truncate rejection,
+  failover option checks, HTTP health, and Docker port checks.
+
 ## v0.1.x Scope
 
 - Policy structs and validation.

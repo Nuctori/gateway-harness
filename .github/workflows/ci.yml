@@ -21,6 +21,8 @@ jobs:
 
       - run: go test ./...
 
+      - run: sh -n examples/newapi/online-acceptance.sh
+
       - run: go build -o dist/gateway-harness ./cmd/gateway-harness
 
       - run: ./dist/gateway-harness validate examples/newapi/context-harness.policy.json
