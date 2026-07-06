@@ -96,6 +96,19 @@ contract for realistic adapter flows.
 - Adds `compile-rule-stewards`, a NewAPI compact steward rule fixture, and a smolagents runner
   example.
 
+## v0.2.10 Scope
+
+- Adds the bundled demo-stack archive for the "unpack and run" experience.
+- Packages `gateway-harness`, `goal-gate-host-http`, the Goal Gate demo UI assets, the smolagents
+  runner example, and the NewAPI example files into a runnable Linux demo bundle for amd64 and
+  arm64.
+- Uses the bundled deterministic `goalreviewhelper` by default so the demo stack runs without
+  external model credentials.
+- Starts `NewAPI` from the official `calciumion/new-api:latest` image alongside the Goal Gate host
+  demo so users can see the adapter example and AI-in-the-loop sidecar in one unpacked release.
+- Keeps the core release split clean: the main archive still carries the CLI and schemas, while the
+  demo stack is a convenience bundle for fast local verification.
+
 ## v0.1.x Scope
 
 - Policy structs and validation.
@@ -115,6 +128,7 @@ contract for realistic adapter flows.
 - NewAPI example policy and adapter contract documentation.
 - Release archive with examples, fixtures, docs, README files, and license.
 - Cross-compiled CLI artifacts for Linux amd64, Linux arm64, Linux armv7, and Windows amd64.
+- Demo stack archive for Linux amd64 and Linux arm64.
 
 ## Out Of Scope For v0.2.0
 
@@ -137,4 +151,5 @@ git tag v0.2.0
 git push origin v0.2.0
 ```
 
-The release workflow uploads CLI binaries, schemas, and checksums.
+The release workflow uploads CLI binaries, example host binaries, schemas, checksums, and demo
+stack archives.

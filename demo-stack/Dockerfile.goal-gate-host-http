@@ -1,0 +1,14 @@
+FROM alpine:3.20
+
+RUN apk add --no-cache ca-certificates
+
+WORKDIR /workspace
+
+COPY goal-gate-host-http /usr/local/bin/goal-gate-host-http
+COPY goalreviewhelper /usr/local/bin/goalreviewhelper
+COPY examples/goal-gate-host/ui-demo.html /workspace/demo-stack/ui-demo.html
+COPY examples/goal-gate-host/goal-gate-host.bundle.example.json /workspace/demo-stack/goal-gate-host.bundle.example.json
+
+EXPOSE 4070
+
+ENTRYPOINT ["/usr/local/bin/goal-gate-host-http", "-addr", "0.0.0.0:4070", "-config", "/workspace/demo-stack/goal-gate.demo.config.json", "-spec", "/workspace/fixtures/goal-gate/goal.before_complete.steward.json", "-event", "/workspace/fixtures/goal-gate/goal.before_complete.steward-event.json", "-audit", "/workspace/fixtures/goal-gate/goal.before_complete.audit.json"]

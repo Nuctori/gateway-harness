@@ -395,6 +395,8 @@ The main project should publish:
 - `gateway-harness.steward-proposal.schema.json`.
 - Checksums.
 - `gateway-harness-examples.tar.gz` with examples, fixtures, docs, and README files.
+- `gateway-harness-demo-stack-<platform>.tar.gz` with the runnable NewAPI + Goal Gate demo bundle for
+  Linux amd64 and Linux arm64.
 
 Gateway-specific builds, patches, and images belong in adapter repositories such as
 `newapi-gateway-harness-example`.

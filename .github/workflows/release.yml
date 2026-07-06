@@ -49,11 +49,25 @@ jobs:
         run: |
           mkdir -p dist
           go build -ldflags "-s -w" -o "dist/gateway-harness-${{ matrix.suffix }}" ./cmd/gateway-harness
+          go build -ldflags "-s -w" -o "dist/goal-gate-host-http-${{ matrix.suffix }}" ./examples/goal-gate-host-http
+          go build -ldflags "-s -w" -o "dist/goalreviewhelper-${{ matrix.suffix }}" ./cmd/gateway-harness/testdata/goalreviewhelper
 
       - uses: actions/upload-artifact@v4
         with:
           name: gateway-harness-${{ matrix.suffix }}
           path: dist/gateway-harness-${{ matrix.suffix }}
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: goal-gate-host-http-${{ matrix.suffix }}
+          path: dist/goal-gate-host-http-${{ matrix.suffix }}
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: goalreviewhelper-${{ matrix.suffix }}
+          path: dist/goalreviewhelper-${{ matrix.suffix }}
           if-no-files-found: error
 
   release:
@@ -79,6 +93,23 @@ jobs:
             README.zh-CN.md \
             RELEASE.md \
             LICENSE
+          for suffix in linux-amd64 linux-arm64; do
+            stack_dir="dist/demo-stack-${suffix}"
+            mkdir -p "${stack_dir}/examples" "${stack_dir}/fixtures"
+            cp "dist/gateway-harness-${suffix}" "${stack_dir}/gateway-harness"
+            cp "dist/goal-gate-host-http-${suffix}" "${stack_dir}/goal-gate-host-http"
+            cp "dist/goalreviewhelper-${suffix}" "${stack_dir}/goalreviewhelper"
+            cp -R demo-stack "${stack_dir}/"
+            cp examples/goal-gate-host/ui-demo.html "${stack_dir}/demo-stack/ui-demo.html"
+            cp examples/goal-gate-host/goal-gate-host.bundle.example.json "${stack_dir}/demo-stack/goal-gate-host.bundle.example.json"
+            cp -R examples/goal-gate-host "${stack_dir}/examples/"
+            cp -R examples/smolagents "${stack_dir}/examples/"
+            cp -R examples/newapi "${stack_dir}/examples/"
+            cp -R fixtures/goal-gate "${stack_dir}/fixtures/"
+            cp README.md README.zh-CN.md RELEASE.md LICENSE "${stack_dir}/"
+            tar -C "${stack_dir}" -czf "dist/gateway-harness-demo-stack-${suffix}.tar.gz" .
+            rm -rf "${stack_dir}"
+          done
           cd dist
           sha256sum * > checksums.txt
 

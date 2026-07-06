@@ -1,0 +1,29 @@
+services:
+  newapi:
+    image: calciumion/new-api:latest
+    container_name: gateway-harness-newapi
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "3000:3000"
+    volumes:
+      - newapi-data:/data
+
+  goal-gate-host:
+    build:
+      context: ..
+      dockerfile: demo-stack/Dockerfile.goal-gate-host-http
+    container_name: gateway-harness-goal-gate-host
+    restart: unless-stopped
+    depends_on:
+      - newapi
+    ports:
+      - "4070:4070"
+    volumes:
+      - ../examples:/workspace/examples:ro
+      - ../fixtures:/workspace/fixtures:ro
+      - ../demo-stack:/workspace/demo-stack:ro
+
+volumes:
+  newapi-data:

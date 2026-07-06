@@ -1063,6 +1063,8 @@ Gateway Harness 独立发布。
 - `gateway-harness.steward-proposal.schema.json`。
 - checksums。
 - `gateway-harness-examples.tar.gz`，包含 examples、fixtures、docs 和 README。
+- `gateway-harness-demo-stack-<platform>.tar.gz`，包含可直接启动的 NewAPI + Goal Gate 演示包，
+  目前仅发布 Linux amd64 和 Linux arm64。
 
 网关特定补丁、adapter 实现、Docker 镜像或部署脚本，应放到独立 adapter 仓库或宿主网关仓库。
 
