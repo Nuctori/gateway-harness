@@ -136,6 +136,7 @@ Stewards are for cases such as:
 - stuck-session diagnosis
 - failover context repair
 - session tagging for later audit
+- goal-completion review before an executor marks work complete
 
 Stewards must not be implicit gateway behavior. A valid steward spec must declare explicit hooks, a
 steward model, redacted inputs, allowed output actions, artifact types, and required guards.
@@ -146,6 +147,19 @@ validates the proposal returned on stdout. The event must use only inputs declar
 spec and must not contain reserved raw-content keys such as `prompt`, `messages`, `content`, `input`,
 or `output`. The recommended example runner uses Hugging Face `smolagents`, but the core contract
 only depends on JSON over stdin/stdout.
+
+Goal Gate is the thin executor-facing version of the same contract. When an explicit sidecar or host
+interceptor decides to guard completion, it may emit `goal.before_complete`, call a configured runner,
+validate the returned proposal, and then either allow complete on `goal.approve_complete` or keep the
+goal open on `goal.reject_complete` plus `goal.request_continue`. The harness core still does not
+intercept completion by itself, call an AI implicitly, or persist hidden workflow state. Continue
+limits, cooldowns, duplicate-reason dedupe, and ledger append all happen because the host opted into
+the Goal Gate flow and consumed the validated result.
+
+If a Goal Gate steward is also allowed to emit `context.inject`, that output is treated as an explicit
+continuation patch suggestion only. The validated result exposes it as redacted `continuation_patches`
+for the host to consume or ignore. Gateway Harness does not silently apply those patches to a future
+request on its own.
 
 Required safety boundaries:
 

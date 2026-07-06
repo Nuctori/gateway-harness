@@ -157,6 +157,53 @@ func TestValidateProposalRejectsIrrelevantContextInjectField(t *testing.T) {
 	}
 }
 
+func TestValidateAcceptsGoalGateSteward(t *testing.T) {
+	s, err := Decode(strings.NewReader(goalGateStewardJSON))
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if err := Validate(s); err != nil {
+		t.Fatalf("validate: %v", err)
+	}
+	p, err := DecodeProposal(strings.NewReader(goalGateRejectProposalJSON))
+	if err != nil {
+		t.Fatalf("decode proposal: %v", err)
+	}
+	if err := ValidateProposal(s, p); err != nil {
+		t.Fatalf("validate proposal: %v", err)
+	}
+}
+
+func TestValidateGoalGateRejectsActionNotAllowedBySpec(t *testing.T) {
+	s, err := Decode(strings.NewReader(strings.Replace(goalGateStewardJSON, `"goal.request_continue"`, `"diagnosis.note.create"`, 1)))
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	p, err := DecodeProposal(strings.NewReader(goalGateRejectProposalJSON))
+	if err != nil {
+		t.Fatalf("decode proposal: %v", err)
+	}
+	if err := ValidateProposal(s, p); err == nil {
+		t.Fatal("expected action not allowed error")
+	}
+}
+
+func TestValidateGoalRequestContinueRequiresInstruction(t *testing.T) {
+	s, err := Decode(strings.NewReader(goalGateStewardJSON))
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	raw := strings.Replace(goalGateRejectProposalJSON, `,
+      "instruction": "Continue by deploying the fixed image and running a request-level smoke test."`, "", 1)
+	p, err := DecodeProposal(strings.NewReader(raw))
+	if err != nil {
+		t.Fatalf("decode proposal: %v", err)
+	}
+	if err := ValidateProposal(s, p); err == nil {
+		t.Fatal("expected missing instruction error")
+	}
+}
+
 const compactStewardJSON = `{
   "version": "0.1",
   "name": "newapi-compact-context-steward",
@@ -166,6 +213,63 @@ const compactStewardJSON = `{
   "allowed_actions": ["context.inject", "ledger.artifact.create", "diagnosis.note.create", "session.tags.update"],
   "artifact_types": ["compact_summary"],
   "required_guards": ["explicit_invocation_only", "structured_output_only", "validate_output_actions", "redacted_input_only", "artifact_hash_required"]
+}`
+
+const goalGateStewardJSON = `{
+  "version": "0.1",
+  "name": "goal-completion-reviewer",
+  "steward_model": "external-agent",
+  "hooks": ["goal.before_complete"],
+  "inputs": ["goal_state", "work_summary", "test_results", "blockers", "recent_trace", "changed_files", "verification_summary", "user_goal"],
+  "allowed_actions": ["goal.approve_complete", "goal.reject_complete", "goal.request_continue", "diagnosis.note.create", "ledger.artifact.create"],
+  "artifact_types": ["trace"],
+  "required_guards": ["explicit_invocation_only", "structured_output_only", "validate_output_actions", "redacted_input_only", "artifact_hash_required"]
+}`
+
+const goalGateRejectProposalJSON = `{
+  "version": "0.1",
+  "id": "proposal_goal_review_001",
+  "steward": "goal-completion-reviewer",
+  "hook": "goal.before_complete",
+  "outputs": [
+    {
+      "action": "goal.reject_complete",
+      "reason": "Focused tests passed, but deployment verification is missing."
+    },
+    {
+      "action": "goal.request_continue",
+      "reason": "Continue by deploying the fixed image and running a request-level smoke test.",
+      "instruction": "Continue by deploying the fixed image and running a request-level smoke test."
+    }
+  ]
+}`
+
+const goalGateApproveProposalJSON = `{
+  "version": "0.1",
+  "id": "proposal_goal_review_approve_001",
+  "steward": "goal-completion-reviewer",
+  "hook": "goal.before_complete",
+  "outputs": [
+    {
+      "action": "goal.approve_complete",
+      "reason": "Goal contract, event validation, and dry-run outputs match the declared steward spec."
+    }
+  ]
+}`
+
+const goalGateEventJSON = `{
+  "hook": "goal.before_complete",
+  "redacted": true,
+  "inputs": {
+    "goal_state": {"status": "pending_complete", "attempt": 1, "max_continue_attempts": 3},
+    "work_summary": "Focused tests passed.",
+    "test_results": [{"command": "go test ./...", "status": "passed"}],
+    "blockers": [],
+    "recent_trace": [{"event": "deploy", "status": "missing"}],
+    "changed_files": ["service/context_harness_steward.go"],
+    "verification_summary": "Deployment verification missing.",
+    "user_goal": "Finish Goal Gate safely."
+  }
 }`
 
 const compactStewardProposalJSON = `{

@@ -41,6 +41,15 @@
           "$ref": "#/$defs/diagnosisNoteOutput"
         },
         {
+          "$ref": "#/$defs/goalApproveOutput"
+        },
+        {
+          "$ref": "#/$defs/goalRejectOutput"
+        },
+        {
+          "$ref": "#/$defs/goalRequestContinueOutput"
+        },
+        {
           "$ref": "#/$defs/sessionTagsOutput"
         }
       ]
@@ -53,6 +62,10 @@
       "minLength": 1
     },
     "ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "instruction": {
       "type": "string",
       "minLength": 1
     },
@@ -147,6 +160,48 @@
         }
       },
       "required": ["action", "tags"]
+    },
+    "goalApproveOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "goal.approve_complete"
+        },
+        "reason": {
+          "$ref": "#/$defs/reason"
+        }
+      },
+      "required": ["action"]
+    },
+    "goalRejectOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "goal.reject_complete"
+        },
+        "reason": {
+          "$ref": "#/$defs/reason"
+        }
+      },
+      "required": ["action", "reason"]
+    },
+    "goalRequestContinueOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "goal.request_continue"
+        },
+        "reason": {
+          "$ref": "#/$defs/reason"
+        },
+        "instruction": {
+          "$ref": "#/$defs/instruction"
+        }
+      },
+      "required": ["action", "instruction"]
     }
   }
 }

@@ -50,6 +50,9 @@
       "enum": [
         "*",
         "context.continuity_drop.detected",
+        "goal.before_complete",
+        "goal.before_resume",
+        "goal.after_complete",
         "request.before_model_mapping",
         "request.before_upstream",
         "chat.before_model_mapping",

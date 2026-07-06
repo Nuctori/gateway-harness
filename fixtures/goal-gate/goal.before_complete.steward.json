@@ -1,0 +1,31 @@
+{
+  "version": "0.1",
+  "name": "goal-completion-reviewer",
+  "steward_model": "external-agent",
+  "hooks": ["goal.before_complete"],
+  "inputs": [
+    "goal_state",
+    "work_summary",
+    "test_results",
+    "blockers",
+    "recent_trace",
+    "changed_files",
+    "verification_summary",
+    "user_goal"
+  ],
+  "allowed_actions": [
+    "goal.approve_complete",
+    "goal.reject_complete",
+    "goal.request_continue",
+    "diagnosis.note.create",
+    "ledger.artifact.create"
+  ],
+  "artifact_types": ["trace"],
+  "required_guards": [
+    "explicit_invocation_only",
+    "structured_output_only",
+    "validate_output_actions",
+    "redacted_input_only",
+    "artifact_hash_required"
+  ]
+}

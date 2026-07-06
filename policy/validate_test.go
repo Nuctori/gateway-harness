@@ -80,6 +80,30 @@ func TestValidateAcceptsContinuityDropHookAndCondition(t *testing.T) {
 	}
 }
 
+func TestValidateAcceptsGoalResumeHook(t *testing.T) {
+	p, err := Decode(strings.NewReader(`{
+		"programs": [{
+			"name": "goal-resume",
+			"models": ["*"],
+			"steps": [{
+				"hook": "goal.before_resume",
+				"do": [{
+					"action": "context.inject",
+					"role": "system",
+					"position": "after_existing_system",
+					"text": "Resume with the normalized project context."
+				}]
+			}]
+		}]
+	}`))
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if err := Validate(p); err != nil {
+		t.Fatalf("validate: %v", err)
+	}
+}
+
 func TestValidateRejectsUnsupportedAction(t *testing.T) {
 	p, err := Decode(strings.NewReader(`{
 		"programs": [{

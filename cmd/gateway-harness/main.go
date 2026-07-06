@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -144,6 +145,27 @@ func main() {
 		printAdapterSummary(m)
 	case "adapter-schema":
 		fmt.Print(schema.AdapterJSON)
+	case "goal-gate-config-schema":
+		fmt.Print(schema.GoalGateConfigJSON)
+	case "goal-gate-result-schema":
+		fmt.Print(schema.GoalGateResultJSON)
+	case "goal-gate-form-schema":
+		fmt.Print(schema.GoalGateFormJSON)
+	case "goal-gate-form-model":
+		printJSON(schema.GoalGateFormModel())
+	case "goal-gate-host-bundle":
+		printJSON(schema.GoalGateHostBundle())
+	case "validate-goal-gate-config":
+		if len(os.Args) != 3 {
+			usage()
+			os.Exit(2)
+		}
+		cfg := mustLoadGoalGateConfig(os.Args[2])
+		if err := adapter.ValidateGoalGateConfig(cfg); err != nil {
+			fmt.Fprintf(os.Stderr, "invalid goal gate config: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("goal gate config ok")
 	case "conformance-schema":
 		fmt.Print(schema.ConformanceJSON)
 	case "validate-ledger":
@@ -247,6 +269,22 @@ func main() {
 			os.Exit(1)
 		}
 		printJSON(proposal)
+	case "review-goal-completion":
+		separator := findArg(os.Args, "--")
+		if len(os.Args) < 6 || separator != 4 || separator == len(os.Args)-1 {
+			usage()
+			os.Exit(2)
+		}
+		s := mustLoadStewardSpec(os.Args[2])
+		event, _ := mustLoadStewardEvent(os.Args[3])
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		result, err := steward.ReviewGoalCompletion(ctx, s, event, time.Now().UTC(), os.Args[separator+1], os.Args[separator+2:]...)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "review goal completion failed: %v\n", err)
+			os.Exit(1)
+		}
+		printJSON(result)
 	case "validate-steward-proposal":
 		if len(os.Args) != 4 {
 			usage()
@@ -284,6 +322,83 @@ func main() {
 		result, err := steward.DryRunProposal(s, p, request)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "steward proposal dry-run failed: %v\n", err)
+			os.Exit(1)
+		}
+		printJSON(result)
+	case "evaluate-goal-proposal":
+		if len(os.Args) != 5 {
+			usage()
+			os.Exit(2)
+		}
+		s := mustLoadStewardSpec(os.Args[2])
+		event, _ := mustLoadStewardEvent(os.Args[3])
+		p := mustLoadStewardProposal(os.Args[4])
+		result, err := steward.EvaluateGoalProposal(s, event, p, time.Now().UTC())
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "evaluate goal proposal failed: %v\n", err)
+			os.Exit(1)
+		}
+		printJSON(result)
+	case "apply-goal-review-result":
+		if len(os.Args) != 5 {
+			usage()
+			os.Exit(2)
+		}
+		s := mustLoadStewardSpec(os.Args[2])
+		event, _ := mustLoadStewardEvent(os.Args[3])
+		p := mustLoadStewardProposal(os.Args[4])
+		result, err := steward.EvaluateGoalProposal(s, event, p, time.Now().UTC())
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "apply goal review result failed: %v\n", err)
+			os.Exit(1)
+		}
+		state, err := steward.ExtractGoalState(event.Inputs)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "apply goal review result failed: %v\n", err)
+			os.Exit(1)
+		}
+		printJSON(steward.ApplyGoalReviewResult(result, state, time.Now().UTC()))
+	case "execute-goal-gate-sidecar":
+		separator := findArg(os.Args, "--")
+		if len(os.Args) < 7 || separator != 5 || separator == len(os.Args)-1 {
+			usage()
+			os.Exit(2)
+		}
+		s := mustLoadStewardSpec(os.Args[2])
+		event, _ := mustLoadStewardEvent(os.Args[3])
+		audit := mustLoadGoalGateAuditInput(os.Args[4])
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		result, err := steward.ExecuteGoalGateSidecar(ctx, s, event, audit, time.Now().UTC(), os.Args[separator+1], os.Args[separator+2:]...)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "execute goal gate sidecar failed: %v\n", err)
+			os.Exit(1)
+		}
+		printJSON(result)
+	case "execute-goal-gate":
+		if len(os.Args) != 6 {
+			usage()
+			os.Exit(2)
+		}
+		cfg := mustLoadGoalGateConfig(os.Args[2])
+		s := mustLoadStewardSpec(os.Args[3])
+		event, _ := mustLoadStewardEvent(os.Args[4])
+		audit := mustLoadGoalGateAuditInput(os.Args[5])
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		result, err := adapter.ExecuteGoalGate(ctx, adapter.GoalGateRequest{
+			Config:  cfg,
+			Spec:    s,
+			Event:   event,
+			Audit:   audit,
+			NowUnix: time.Now().UTC().Unix(),
+		})
+		if err != nil {
+			var execErr *adapter.GoalGateExecutionError
+			if errors.As(err, &execErr) {
+				printJSON(execErr.Result)
+			}
+			fmt.Fprintf(os.Stderr, "execute goal gate failed: %v\n", err)
 			os.Exit(1)
 		}
 		printJSON(result)
@@ -364,6 +479,12 @@ Usage:
   gateway-harness validate-adapter <adapter.capability.json>
   gateway-harness explain-adapter <adapter.capability.json>
   gateway-harness adapter-schema
+  gateway-harness goal-gate-config-schema
+  gateway-harness goal-gate-result-schema
+  gateway-harness goal-gate-form-schema
+  gateway-harness goal-gate-form-model
+  gateway-harness goal-gate-host-bundle
+  gateway-harness validate-goal-gate-config <goal-gate.config.json>
   gateway-harness validate-conformance <fixture.json>
   gateway-harness explain-conformance <fixture.json>
   gateway-harness replay-conformance <fixture.json>
@@ -381,10 +502,74 @@ Usage:
   gateway-harness steward-event-schema
   gateway-harness validate-steward-event <steward.json> <event.json>
   gateway-harness run-steward <steward.json> <event.json> -- <agent-command> [args...]
+  gateway-harness review-goal-completion <steward.json> <event.json> -- <agent-command> [args...]
   gateway-harness validate-steward-proposal <steward.json> <proposal.json>
   gateway-harness explain-steward-proposal <steward.json> <proposal.json>
   gateway-harness steward-proposal-schema
-  gateway-harness dry-run-steward-proposal <steward.json> <proposal.json> <request.json>`)
+  gateway-harness dry-run-steward-proposal <steward.json> <proposal.json> <request.json>
+  gateway-harness evaluate-goal-proposal <steward.json> <event.json> <proposal.json>
+  gateway-harness apply-goal-review-result <steward.json> <event.json> <proposal.json>
+  gateway-harness execute-goal-gate-sidecar <steward.json> <event.json> <audit.json> -- <agent-command> [args...]
+  gateway-harness execute-goal-gate <goal-gate.config.json> <steward.json> <event.json> <audit.json>`)
+}
+
+func mustLoadGoalGateConfig(path string) adapter.GoalGateConfig {
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "open goal gate config: %v\n", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	cfg, err := adapter.DecodeGoalGateConfig(file)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "decode goal gate config: %v\n", err)
+		os.Exit(1)
+	}
+	configDir := filepath.Dir(path)
+	if strings.TrimSpace(cfg.Runner.Workdir) != "" && !filepath.IsAbs(cfg.Runner.Workdir) {
+		cfg.Runner.Workdir = filepath.Clean(filepath.Join(configDir, cfg.Runner.Workdir))
+	}
+	return cfg
+}
+
+func mustLoadGoalGateAuditInput(path string) steward.GoalGateAuditInput {
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "open goal gate audit input: %v\n", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	var input struct {
+		Project       ledger.AppendProject `json:"project"`
+		Session       ledger.AppendSession `json:"session"`
+		EventID       string               `json:"event_id"`
+		At            string               `json:"at"`
+		PolicyVersion string               `json:"policy_version"`
+		TraceHash     string               `json:"trace_hash"`
+		Model         string               `json:"model"`
+	}
+	decoder := json.NewDecoder(file)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&input); err != nil {
+		fmt.Fprintf(os.Stderr, "decode goal gate audit input: %v\n", err)
+		os.Exit(1)
+	}
+	at, err := time.Parse(time.RFC3339, input.At)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "decode goal gate audit input: at must be RFC3339\n")
+		os.Exit(1)
+	}
+	return steward.GoalGateAuditInput{
+		Project:       input.Project,
+		Session:       input.Session,
+		EventID:       input.EventID,
+		At:            at,
+		PolicyVersion: input.PolicyVersion,
+		TraceHash:     input.TraceHash,
+		Model:         input.Model,
+	}
 }
 
 func mustLoadPolicy(path string) policy.Policy {

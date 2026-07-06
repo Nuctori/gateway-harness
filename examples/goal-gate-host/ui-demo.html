@@ -1,0 +1,1425 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Goal Gate Host UI Demo</title>
+  <style>
+    :root {
+      --bg: #f4efe5;
+      --panel: rgba(255, 251, 245, 0.94);
+      --panel-strong: rgba(255, 255, 252, 0.98);
+      --ink: #182126;
+      --muted: #5c666d;
+      --line: rgba(24, 33, 38, 0.11);
+      --accent: #bf5228;
+      --accent-soft: rgba(191, 82, 40, 0.12);
+      --ok: #1f7a4f;
+      --warn: #99611d;
+      --fail: #9b3131;
+      --shadow: 0 20px 55px rgba(24, 33, 38, 0.08);
+      --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      --sans: "Segoe UI", "Helvetica Neue", sans-serif;
+      --mono: "Cascadia Code", "Consolas", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at top right, rgba(191, 82, 40, 0.18), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(31, 122, 79, 0.14), transparent 26%),
+        linear-gradient(180deg, #f8f4eb 0%, var(--bg) 100%);
+    }
+
+    .shell {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 34px 18px 64px;
+    }
+
+    .hero,
+    .workspace {
+      display: grid;
+      gap: 22px;
+    }
+
+    .hero {
+      grid-template-columns: 1.15fr 0.85fr;
+      margin-bottom: 24px;
+    }
+
+    .workspace {
+      grid-template-columns: 1.1fr 0.9fr;
+      align-items: start;
+    }
+
+    .card,
+    .panel,
+    .chat-message,
+    .result-card,
+    .section-card,
+    .summary-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .card,
+    .panel,
+    .summary-card {
+      padding: 24px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      font-family: var(--serif);
+      font-weight: 700;
+    }
+
+    h1 {
+      font-size: clamp(34px, 5vw, 58px);
+      line-height: 0.95;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      font-size: 30px;
+      margin-bottom: 8px;
+    }
+
+    h3 {
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+
+    p,
+    .muted,
+    .small,
+    .meta-value,
+    .field-description,
+    .status-copy {
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .hero-copy {
+      max-width: 58ch;
+    }
+
+    .meta-grid,
+    .summary-grid,
+    .result-grid,
+    .field-list,
+    .stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    .meta-grid,
+    .summary-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .meta-item,
+    .summary-item {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: var(--panel-strong);
+      border: 1px solid var(--line);
+    }
+
+    .meta-label,
+    .field-path,
+    .result-key,
+    .pill-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .workspace-main,
+    .workspace-side {
+      display: grid;
+      gap: 22px;
+    }
+
+    .chat-shell {
+      display: grid;
+      gap: 18px;
+    }
+
+    .chat-log {
+      min-height: 440px;
+      max-height: 620px;
+      overflow: auto;
+      display: grid;
+      gap: 14px;
+      padding-right: 4px;
+    }
+
+    .chat-message {
+      padding: 18px 18px 16px;
+      background: var(--panel-strong);
+    }
+
+    .chat-message.user {
+      border-left: 6px solid rgba(24, 33, 38, 0.2);
+    }
+
+    .chat-message.assistant {
+      border-left: 6px solid var(--accent);
+    }
+
+    .chat-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+
+    .chat-role {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .chat-role.user-role {
+      color: var(--ink);
+    }
+
+    .chat-text {
+      white-space: pre-wrap;
+      line-height: 1.7;
+    }
+
+    .chips,
+    .tag-list,
+    .action-row,
+    .quick-list,
+    .change-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip,
+    .tag,
+    .pill,
+    .ghost,
+    .primary {
+      border-radius: 999px;
+      border: 1px solid transparent;
+      padding: 9px 14px;
+      font: inherit;
+      cursor: pointer;
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    }
+
+    .chip,
+    .tag,
+    .pill,
+    .ghost {
+      background: rgba(24, 33, 38, 0.06);
+      color: var(--ink);
+    }
+
+    .chip.active,
+    .tag.active {
+      background: var(--accent-soft);
+      border-color: rgba(191, 82, 40, 0.26);
+      color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(191, 82, 40, 0.22);
+    }
+
+    .ghost {
+      border-color: rgba(24, 33, 38, 0.12);
+      background: rgba(255, 255, 255, 0.75);
+    }
+
+    .chip:hover,
+    .tag:hover,
+    .ghost:hover,
+    .primary:hover {
+      transform: translateY(-1px);
+    }
+
+    .composer {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(24, 33, 38, 0.1);
+    }
+
+    textarea,
+    input,
+    select {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(24, 33, 38, 0.18);
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.86);
+      color: var(--ink);
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 112px;
+      resize: vertical;
+      line-height: 1.65;
+    }
+
+    code,
+    .json-box {
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .json-box {
+      border-radius: 16px;
+      background: #f7f2e8;
+      border: 1px solid rgba(24, 33, 38, 0.1);
+      padding: 16px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      overflow: auto;
+      max-height: 320px;
+    }
+
+    .result-card {
+      padding: 18px;
+      border-left: 6px solid var(--accent);
+      background: var(--panel-strong);
+    }
+
+    .result-card.ok { border-left-color: var(--ok); }
+    .result-card.warn { border-left-color: var(--warn); }
+    .result-card.fail { border-left-color: var(--fail); }
+
+    .result-grid {
+      grid-template-columns: 140px 1fr;
+    }
+
+    .result-actions,
+    .field-top,
+    .toggle-row,
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .toggle-row {
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(24, 33, 38, 0.13);
+      background: rgba(255, 255, 255, 0.76);
+      margin-top: 10px;
+    }
+
+    .toggle-row input {
+      width: 22px;
+      height: 22px;
+      accent-color: var(--accent);
+    }
+
+    .section-card {
+      padding: 18px;
+      background: var(--panel-strong);
+    }
+
+    .field {
+      border-top: 1px dashed var(--line);
+      padding-top: 14px;
+    }
+
+    .field:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .field-title {
+      font-weight: 700;
+      display: block;
+    }
+
+    .drawer-body {
+      display: grid;
+      gap: 18px;
+      margin-top: 14px;
+    }
+
+    .callout {
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(191, 82, 40, 0.1);
+      border: 1px solid rgba(191, 82, 40, 0.14);
+      line-height: 1.65;
+      color: var(--muted);
+    }
+
+    .status-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(24, 33, 38, 0.06);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .status-pill.ok { background: rgba(31, 122, 79, 0.12); color: var(--ok); }
+    .status-pill.warn { background: rgba(153, 97, 29, 0.13); color: var(--warn); }
+    .status-pill.fail { background: rgba(155, 49, 49, 0.12); color: var(--fail); }
+
+    .hook-catalog {
+      display: grid;
+      gap: 14px;
+    }
+
+    .hook-card {
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: var(--panel-strong);
+      border: 1px solid rgba(24, 33, 38, 0.1);
+      display: grid;
+      gap: 10px;
+    }
+
+    .hook-card.active {
+      border-color: rgba(191, 82, 40, 0.28);
+      box-shadow: inset 0 0 0 1px rgba(191, 82, 40, 0.14);
+    }
+
+    .hook-head,
+    .hook-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .hook-name {
+      font-weight: 700;
+    }
+
+    .hook-id {
+      color: var(--muted);
+      font-size: 12px;
+      font-family: var(--mono);
+      word-break: break-all;
+    }
+
+    .hook-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 1120px) {
+      .hero,
+      .workspace,
+      .meta-grid,
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <article class="card">
+        <div class="eyebrow">Chat-First Goal Gate</div>
+        <h1 id="bundle-title">Gateway Harness Goal Gate Host Bundle</h1>
+        <p class="hero-copy" id="bundle-description"></p>
+        <div class="status-bar">
+          <div class="status-pill" id="api-status">正在检查本地 Host API</div>
+          <div class="status-pill" id="draft-status">当前无待应用草案</div>
+        </div>
+      </article>
+
+      <aside class="summary-card">
+        <h3>交互原则</h3>
+        <p id="transparency-note"></p>
+        <div class="meta-grid" style="margin-top: 14px;">
+          <div class="meta-item">
+            <div class="meta-label">主界面</div>
+            <div class="meta-value" id="primary-surface"></div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">次级界面</div>
+            <div class="meta-value" id="secondary-surface"></div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">AI 产物</div>
+            <div class="meta-value" id="assistant-output"></div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">是否自动生效</div>
+            <div class="meta-value" id="assistant-apply"></div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="workspace">
+      <div class="workspace-main">
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>AI 配置助手</h2>
+              <p class="muted">你可以直接说“帮我启用 Goal Gate，用 smolagents 审查完成状态，允许 context.inject，最多继续 3 次”。助手只会生成可见的配置草案，不会偷偷生效。</p>
+            </div>
+            <button class="ghost" type="button" id="seed-example">填入示例话术</button>
+          </div>
+
+          <div class="chat-shell">
+            <div class="chat-log" id="chat-log"></div>
+
+            <div class="composer">
+              <div class="quick-list" id="assistant-examples"></div>
+              <textarea id="chat-input" placeholder="例如：帮我启用 Goal Gate，用 smolagents 审查 goal 完成状态，允许 context.inject，最多继续 4 次，冷却 90 秒。"></textarea>
+              <div class="action-row">
+                <div class="small">聊天用于生成配置草案；真正生效仍然要点“应用草案”。</div>
+                <div class="action-row">
+                  <button class="ghost" type="button" id="clear-chat">清空会话</button>
+                  <button class="primary" type="button" id="send-chat">生成草案</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>执行预览</h2>
+              <p class="muted">这里展示当前配置打到 Goal Gate 后，会返回怎样的结构化结果。若本地 HTTP Host 在线，会调用真实 `execute-goal-gate` 路径；否则退回示例卡片。</p>
+            </div>
+            <button class="ghost" type="button" id="run-preview">运行预览</button>
+          </div>
+          <div class="stack" id="execution-results"></div>
+        </article>
+      </div>
+
+      <div class="workspace-side">
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>当前草案</h2>
+              <p class="muted">这里始终展示“显式配置”，无论它来自手动编辑还是聊天生成。</p>
+            </div>
+            <div class="action-row">
+              <button class="ghost" type="button" id="reset-config">重置</button>
+              <button class="primary" type="button" id="apply-draft">应用草案</button>
+            </div>
+          </div>
+
+          <div class="summary-grid">
+            <div class="summary-item">
+              <div class="meta-label">配置方式</div>
+              <div class="meta-value">手动配置 + AI 生成草案</div>
+            </div>
+            <div class="summary-item">
+              <div class="meta-label">透明边界</div>
+              <div class="meta-value">默认关闭，默认不注入，默认不拦截，默认不落账本</div>
+            </div>
+          </div>
+
+          <pre class="json-box" id="config-preview"></pre>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>手动设置</h2>
+              <p class="muted">如果你不想和 AI 聊，直接在这里手动改。字段来自 `form_model`，不是隐藏字典。</p>
+            </div>
+            <button class="ghost" type="button" id="toggle-settings">展开/收起</button>
+          </div>
+          <div class="drawer-body" id="settings-drawer"></div>
+        </article>
+
+        <article class="panel">
+          <h2>Hook 图鉴</h2>
+          <p class="muted">这里展示当前 Host bundle 提供的 hook 目录和中英文说明。不是所有 hook 都会出现在当前 Goal Gate 设置里，但可用边界会直接写明。</p>
+          <div class="hook-catalog" id="hook-catalog"></div>
+        </article>
+
+        <article class="panel">
+          <h2>草案变更</h2>
+          <p class="muted">AI 只允许返回字段级变更说明，方便宿主做 hover、diff 和审批。</p>
+          <div class="stack" id="change-summary"></div>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const state = {
+      bundle: null,
+      currentConfig: null,
+      baseConfig: null,
+      pendingProposal: null,
+      latestAssistantResponse: null,
+      apiAvailable: false,
+      exampleRequest: null,
+      settingsCollapsed: false,
+      chat: [],
+    };
+
+    const localAssistantExamples = [
+      '帮我启用 Goal Gate，用 smolagents 审查完成状态，最多继续 3 次。',
+      '允许 context.inject，但仍然保持全部行为显式。',
+      '关闭 Goal Gate，保留现有草案别自动生效。'
+    ];
+
+    function normalizeConfig(config) {
+      const normalized = JSON.parse(JSON.stringify(config || {}));
+      if (!normalized.enabled) {
+        return {
+          enabled: false,
+          hook: normalized.hook || 'goal.before_complete',
+          runner: normalized.runner || { command: '', workdir: '', args: [] },
+          allowed_inputs: normalized.allowed_inputs || [],
+          allowed_actions: normalized.allowed_actions || [],
+          max_continue_attempts: normalized.max_continue_attempts || 0,
+          cooldown_seconds: normalized.cooldown_seconds || 0,
+        };
+      }
+      normalized.hook = normalized.hook || 'goal.before_complete';
+      normalized.runner = normalized.runner || { command: '', workdir: '', args: [] };
+      normalized.allowed_inputs = normalized.allowed_inputs || [];
+      normalized.allowed_actions = normalized.allowed_actions || [];
+      normalized.max_continue_attempts = Number.isFinite(normalized.max_continue_attempts) ? normalized.max_continue_attempts : 0;
+      normalized.cooldown_seconds = Number.isFinite(normalized.cooldown_seconds) ? normalized.cooldown_seconds : 0;
+      return normalized;
+    }
+
+    function deepClone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function getAtPath(obj, path) {
+      return path.split('.').reduce((acc, key) => (acc && key in acc ? acc[key] : undefined), obj);
+    }
+
+    function setAtPath(obj, path, value) {
+      const parts = path.split('.');
+      let current = obj;
+      for (let i = 0; i < parts.length - 1; i++) {
+        const key = parts[i];
+        if (!(key in current) || typeof current[key] !== 'object' || current[key] === null) {
+          current[key] = {};
+        }
+        current = current[key];
+      }
+      current[parts[parts.length - 1]] = value;
+    }
+
+    function escapeHTML(text) {
+      return String(text || '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    }
+
+    function appendChat(role, text, extras = null) {
+      state.chat.push({ role, text, extras });
+      renderChat();
+    }
+
+    function renderChat() {
+      const host = document.getElementById('chat-log');
+      host.innerHTML = '';
+      for (const message of state.chat) {
+        const article = document.createElement('article');
+        article.className = `chat-message ${message.role}`;
+
+        const head = document.createElement('div');
+        head.className = 'chat-head';
+
+        const role = document.createElement('div');
+        role.className = `chat-role ${message.role === 'user' ? 'user-role' : ''}`;
+        role.textContent = message.role === 'user' ? '你' : '配置助手';
+
+        const stamp = document.createElement('div');
+        stamp.className = 'small';
+        stamp.textContent = message.role === 'assistant' ? '只生成显式草案' : '自然语言输入';
+
+        head.appendChild(role);
+        head.appendChild(stamp);
+
+        const body = document.createElement('div');
+        body.className = 'chat-text';
+        body.textContent = message.text;
+
+        article.appendChild(head);
+        article.appendChild(body);
+
+        if (message.extras && message.extras.changes && message.extras.changes.length) {
+          const changeBox = document.createElement('div');
+          changeBox.className = 'change-list';
+          changeBox.style.marginTop = '12px';
+          for (const change of message.extras.changes.slice(0, 6)) {
+            const pill = document.createElement('div');
+            pill.className = 'status-pill';
+            pill.textContent = `${change.path} -> ${formatChangeValue(change.to)}`;
+            pill.title = change.reason || '';
+            changeBox.appendChild(pill);
+          }
+          article.appendChild(changeBox);
+        }
+
+        host.appendChild(article);
+      }
+      host.scrollTop = host.scrollHeight;
+    }
+
+    function formatChangeValue(value) {
+      if (Array.isArray(value)) return value.join(', ');
+      if (value && typeof value === 'object') return JSON.stringify(value);
+      return String(value);
+    }
+
+    function updateStatuses() {
+      const apiStatus = document.getElementById('api-status');
+      apiStatus.textContent = state.apiAvailable ? '已连接本地 Host API' : '未连接 API，当前使用静态 bundle 与本地演示';
+      apiStatus.className = `status-pill ${state.apiAvailable ? 'ok' : 'warn'}`;
+
+      const draftStatus = document.getElementById('draft-status');
+      if (state.pendingProposal) {
+        draftStatus.textContent = '存在待应用草案';
+        draftStatus.className = 'status-pill warn';
+      } else {
+        draftStatus.textContent = '当前无待应用草案';
+        draftStatus.className = 'status-pill';
+      }
+    }
+
+    function updateConfigPreview() {
+      const preview = document.getElementById('config-preview');
+      preview.textContent = JSON.stringify(normalizeConfig(state.currentConfig), null, 2);
+    }
+
+    function currentLocale() {
+      return state.bundle?.i18n?.default_locale || 'zh-CN';
+    }
+
+    function localizedHookInfo(hookId) {
+      const catalog = state.bundle?.hook_catalog || [];
+      const entry = catalog.find((item) => item.id === hookId);
+      if (!entry) return null;
+      const locales = entry.locales || {};
+      return locales[currentLocale()] || locales['en-US'] || Object.values(locales)[0] || null;
+    }
+
+    function renderHookCatalog(bundle) {
+      const host = document.getElementById('hook-catalog');
+      host.innerHTML = '';
+
+      for (const entry of bundle.hook_catalog || []) {
+        const text = localizedHookInfo(entry.id) || {};
+        const card = document.createElement('article');
+        card.className = `hook-card ${state.currentConfig?.hook === entry.id ? 'active' : ''}`;
+
+        const head = document.createElement('div');
+        head.className = 'hook-head';
+
+        const copy = document.createElement('div');
+        const name = document.createElement('div');
+        name.className = 'hook-name';
+        name.textContent = text.title || entry.id;
+        const id = document.createElement('div');
+        id.className = 'hook-id';
+        id.textContent = entry.id;
+        copy.appendChild(name);
+        copy.appendChild(id);
+
+        const statePill = document.createElement('div');
+        statePill.className = `status-pill ${entry.goal_gate_selectable ? 'ok' : 'warn'}`;
+        statePill.textContent = entry.goal_gate_selectable ? '当前 Goal Gate 可配置' : '当前 Host 未开放';
+
+        head.appendChild(copy);
+        head.appendChild(statePill);
+
+        const badges = document.createElement('div');
+        badges.className = 'hook-badges';
+        for (const label of [entry.family, entry.kind].concat(entry.supports_request_payload ? ['request-payload'] : ['goal-lifecycle'])) {
+          const badge = document.createElement('div');
+          badge.className = 'status-pill';
+          badge.textContent = label;
+          badges.appendChild(badge);
+        }
+
+        const summary = document.createElement('p');
+        summary.className = 'status-copy';
+        summary.textContent = text.summary || '';
+
+        card.appendChild(head);
+        card.appendChild(badges);
+        card.appendChild(summary);
+
+        if (text.example) {
+          const example = document.createElement('div');
+          example.className = 'callout';
+          example.textContent = `示例：${text.example}`;
+          card.appendChild(example);
+        }
+
+        host.appendChild(card);
+      }
+    }
+
+    function renderInteractionMetadata(bundle) {
+      document.getElementById('bundle-title').textContent = bundle.title;
+      document.getElementById('bundle-description').textContent = bundle.description;
+      document.getElementById('transparency-note').textContent = bundle.transparency_note;
+      const model = bundle.interaction_model || {};
+      document.getElementById('primary-surface').textContent = model.primary_surface || 'chat_assistant';
+      document.getElementById('secondary-surface').textContent = model.secondary_surface || 'settings_form';
+      document.getElementById('assistant-output').textContent = model.assistant_generates || 'explicit_config_draft';
+      document.getElementById('assistant-apply').textContent = model.assistant_applies_directly ? '是' : '否，必须显式应用';
+
+      const examplesHost = document.getElementById('assistant-examples');
+      examplesHost.innerHTML = '';
+      const examples = (bundle.assistant_examples || []).map((item) => item.user).concat(localAssistantExamples).slice(0, 5);
+      for (const example of examples) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'chip';
+        button.textContent = example;
+        button.addEventListener('click', () => {
+          document.getElementById('chat-input').value = example;
+        });
+        examplesHost.appendChild(button);
+      }
+
+      renderHookCatalog(bundle);
+    }
+
+    function renderSettings(bundle) {
+      const drawer = document.getElementById('settings-drawer');
+      drawer.innerHTML = '';
+      drawer.classList.toggle('hidden', state.settingsCollapsed);
+
+      for (const section of bundle.form_model.sections) {
+        const card = document.createElement('article');
+        card.className = 'section-card';
+
+        const title = document.createElement('h3');
+        title.textContent = section.title;
+        const description = document.createElement('p');
+        description.className = 'muted';
+        description.textContent = section.description || '';
+        const fieldList = document.createElement('div');
+        fieldList.className = 'field-list';
+
+        for (const field of section.fields) {
+          const fieldNode = document.createElement('div');
+          fieldNode.className = 'field';
+
+          const top = document.createElement('div');
+          top.className = 'field-top';
+
+          const left = document.createElement('div');
+          const fieldTitle = document.createElement('label');
+          fieldTitle.className = 'field-title';
+          fieldTitle.textContent = field.title;
+          const fieldPath = document.createElement('div');
+          fieldPath.className = 'field-path';
+          fieldPath.textContent = field.path;
+          left.appendChild(fieldTitle);
+          left.appendChild(fieldPath);
+
+          const right = document.createElement('div');
+          right.className = 'status-bar';
+          const tag = document.createElement('div');
+          tag.className = 'status-pill';
+          tag.textContent = field.control;
+          right.appendChild(tag);
+          if (field.required_when_enabled) {
+            const req = document.createElement('div');
+            req.className = 'status-pill warn';
+            req.textContent = '启用后必填';
+            right.appendChild(req);
+          }
+
+          top.appendChild(left);
+          top.appendChild(right);
+
+          const desc = document.createElement('p');
+          desc.className = 'field-description';
+          desc.textContent = field.description || '';
+
+          fieldNode.appendChild(top);
+          fieldNode.appendChild(desc);
+
+          const currentValue = getAtPath(state.currentConfig, field.path);
+
+          if (field.control === 'toggle') {
+            const row = document.createElement('label');
+            row.className = 'toggle-row';
+            const copy = document.createElement('div');
+            copy.innerHTML = `<strong>${escapeHTML(field.title)}</strong><div class="small">默认关闭，显式开启。</div>`;
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.checked = Boolean(currentValue);
+            input.addEventListener('change', () => {
+              setAtPath(state.currentConfig, field.path, input.checked);
+              onManualConfigChanged();
+            });
+            row.appendChild(copy);
+            row.appendChild(input);
+            fieldNode.appendChild(row);
+          } else if (field.control === 'select') {
+            const select = document.createElement('select');
+            for (const option of field.options || []) {
+              const el = document.createElement('option');
+              el.value = option.value;
+              el.textContent = option.title;
+              el.selected = currentValue === option.value;
+              select.appendChild(el);
+            }
+            select.addEventListener('change', () => {
+              setAtPath(state.currentConfig, field.path, select.value);
+              onManualConfigChanged();
+            });
+            fieldNode.appendChild(select);
+            if (field.path === 'hook') {
+              const info = localizedHookInfo(select.value);
+              if (info) {
+                const helper = document.createElement('div');
+                helper.className = 'callout';
+                helper.textContent = `${info.title}：${info.summary}`;
+                fieldNode.appendChild(helper);
+              }
+            }
+          } else if (field.control === 'multi_select') {
+            const selected = Array.isArray(currentValue) ? currentValue.slice() : [];
+            const chipHost = document.createElement('div');
+            chipHost.className = 'tag-list';
+
+            const rerender = () => {
+              chipHost.innerHTML = '';
+              for (const option of field.options || []) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = `tag ${selected.includes(option.value) ? 'active' : ''}`;
+                button.textContent = option.title;
+                button.title = option.description || '';
+                button.addEventListener('click', () => {
+                  const index = selected.indexOf(option.value);
+                  if (index >= 0) {
+                    selected.splice(index, 1);
+                  } else {
+                    selected.push(option.value);
+                  }
+                  setAtPath(state.currentConfig, field.path, selected.slice());
+                  rerender();
+                  onManualConfigChanged();
+                });
+                chipHost.appendChild(button);
+              }
+            };
+
+            rerender();
+            fieldNode.appendChild(chipHost);
+          } else if (field.path === 'runner.args') {
+            const input = document.createElement('textarea');
+            input.value = Array.isArray(currentValue) ? currentValue.join('\n') : '';
+            input.addEventListener('input', () => {
+              const lines = input.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+              setAtPath(state.currentConfig, field.path, lines);
+              onManualConfigChanged();
+            });
+            fieldNode.appendChild(input);
+          } else if (field.control === 'number') {
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.min = '0';
+            input.value = String(currentValue ?? 0);
+            input.addEventListener('input', () => {
+              const value = Number(input.value || '0');
+              setAtPath(state.currentConfig, field.path, Number.isFinite(value) ? value : 0);
+              onManualConfigChanged();
+            });
+            fieldNode.appendChild(input);
+          } else {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentValue ?? '';
+            input.addEventListener('input', () => {
+              setAtPath(state.currentConfig, field.path, input.value);
+              onManualConfigChanged();
+            });
+            fieldNode.appendChild(input);
+          }
+
+          fieldList.appendChild(fieldNode);
+        }
+
+        card.appendChild(title);
+        card.appendChild(description);
+        card.appendChild(fieldList);
+        drawer.appendChild(card);
+      }
+    }
+
+    function onManualConfigChanged() {
+      state.pendingProposal = null;
+      state.latestAssistantResponse = null;
+      updateConfigPreview();
+      renderHookCatalog(state.bundle);
+      renderChangeSummary();
+      updateStatuses();
+    }
+
+    function renderChangeSummary() {
+      const host = document.getElementById('change-summary');
+      host.innerHTML = '';
+
+      if (!state.latestAssistantResponse || !state.latestAssistantResponse.changes || !state.latestAssistantResponse.changes.length) {
+        const card = document.createElement('div');
+        card.className = 'callout';
+        card.textContent = '当前没有来自 AI 的字段级草案变更。你也可以完全只用右侧设置手动编辑。';
+        host.appendChild(card);
+        return;
+      }
+
+      for (const change of state.latestAssistantResponse.changes) {
+        const card = document.createElement('article');
+        card.className = 'result-card warn';
+        const title = document.createElement('h3');
+        title.textContent = change.path;
+        const body = document.createElement('p');
+        body.className = 'status-copy';
+        body.textContent = change.reason || '字段级变更';
+        const list = document.createElement('div');
+        list.className = 'result-grid';
+        list.innerHTML = `
+          <div class="result-key">from</div>
+          <div>${escapeHTML(formatChangeValue(change.from))}</div>
+          <div class="result-key">to</div>
+          <div>${escapeHTML(formatChangeValue(change.to))}</div>
+        `;
+        card.appendChild(title);
+        card.appendChild(body);
+        card.appendChild(list);
+        host.appendChild(card);
+      }
+    }
+
+    function createResultCard(kind, titleText, sample, copyText) {
+      const card = document.createElement('article');
+      card.className = `result-card ${kind}`;
+
+      const title = document.createElement('h3');
+      title.textContent = titleText;
+      const copy = document.createElement('p');
+      copy.className = 'status-copy';
+      copy.textContent = copyText;
+      const grid = document.createElement('div');
+      grid.className = 'result-grid';
+
+      const rows = sample.failure
+        ? [
+            ['failure.stage', sample.failure.stage],
+            ['failure.code', sample.failure.code],
+            ['failure.message', sample.failure.message || '(none)'],
+            ['triggered', String(sample.triggered)],
+          ]
+        : [
+            ['allow_complete', String(sample.allow_complete)],
+            ['continue_work', String(sample.continue_work)],
+            ['continue_instruction', sample.continue_instruction || '(none)'],
+            ['next_goal_state.status', sample.next_goal_state?.status || '(none)'],
+          ];
+
+      for (const [key, value] of rows) {
+        const k = document.createElement('div');
+        k.className = 'result-key';
+        k.textContent = key;
+        const v = document.createElement('div');
+        v.textContent = value;
+        grid.appendChild(k);
+        grid.appendChild(v);
+      }
+
+      card.appendChild(title);
+      card.appendChild(copy);
+      card.appendChild(grid);
+      return card;
+    }
+
+    function renderExecutionFallback() {
+      const host = document.getElementById('execution-results');
+      host.innerHTML = '';
+      const examples = state.bundle.examples;
+      host.appendChild(createResultCard('ok', 'Approve 示例', examples.approve_result, '执行器可以把 goal 标记为 complete。'));
+      host.appendChild(createResultCard('warn', 'Reject + Continue 示例', examples.reject_result, '执行器必须继续工作，并展示继续指令。'));
+      host.appendChild(createResultCard('fail', 'Failure 示例', examples.failure_result, 'Goal Gate 自身执行失败时，也必须返回结构化失败，而不是静默吞掉。'));
+    }
+
+    async function runPreview() {
+      const host = document.getElementById('execution-results');
+      host.innerHTML = '';
+
+      if (!state.apiAvailable || !state.exampleRequest) {
+        renderExecutionFallback();
+        return;
+      }
+
+      const loading = document.createElement('div');
+      loading.className = 'callout';
+      loading.textContent = '正在调用本地 Host API 的 execute-goal-gate 路径...';
+      host.appendChild(loading);
+
+      try {
+        const response = await fetch('/api/goal-gate/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            config: normalizeConfig(state.currentConfig),
+            event: state.exampleRequest.event,
+            audit: state.exampleRequest.audit,
+          }),
+        });
+        const result = await response.json();
+        host.innerHTML = '';
+        if (result.failure) {
+          host.appendChild(createResultCard('fail', '真实执行结果', result, '这次调用走了真实 Host API，但 Goal Gate 返回了结构化失败。'));
+          return;
+        }
+        const sidecar = result.sidecar || {};
+        const outcome = sidecar.outcome || {};
+        host.appendChild(createResultCard(
+          outcome.allow_complete ? 'ok' : 'warn',
+          '真实执行结果',
+          {
+            allow_complete: Boolean(outcome.allow_complete),
+            continue_work: Boolean(outcome.continue_work),
+            continue_instruction: outcome.continue_instruction || '',
+            next_goal_state: outcome.next_goal_state || {},
+          },
+          '这张卡片来自真实 `execute-goal-gate` 响应，而不是静态样例。'
+        ));
+        if (Array.isArray(sidecar.review?.continuation_patches) && sidecar.review.continuation_patches.length) {
+          const patchCard = document.createElement('div');
+          patchCard.className = 'callout';
+          patchCard.textContent = `返回了 ${sidecar.review.continuation_patches.length} 个 continuation patch 提案，但它们仍然只是显式建议，宿主必须自己决定是否应用。`;
+          host.appendChild(patchCard);
+        }
+      } catch (error) {
+        host.innerHTML = '';
+        const fail = document.createElement('div');
+        fail.className = 'callout';
+        fail.textContent = `真实执行失败，已退回演示模式：${error.message}`;
+        host.appendChild(fail);
+        renderExecutionFallback();
+      }
+    }
+
+    function applyPendingProposal() {
+      if (!state.pendingProposal) {
+        return;
+      }
+      state.currentConfig = deepClone(state.pendingProposal);
+      state.pendingProposal = null;
+      appendChat('assistant', '我已经把草案应用到当前配置视图里了。注意这里只是应用到页面状态；真正保存到宿主配置文件仍然需要显式保存。');
+      updateConfigPreview();
+      renderSettings(state.bundle);
+      renderChangeSummary();
+      updateStatuses();
+    }
+
+    function localAssistant(config, message) {
+      const proposal = deepClone(normalizeConfig(config));
+      const changes = [];
+      const lower = (message || '').toLowerCase();
+
+      const recordChange = (path, from, to, reason) => {
+        if (JSON.stringify(from) === JSON.stringify(to)) return;
+        changes.push({ path, from, to, reason });
+      };
+
+      if (!proposal.hook) {
+        recordChange('hook', '', 'goal.before_complete', 'Goal Gate 当前显式挂在 goal.before_complete。');
+        proposal.hook = 'goal.before_complete';
+      }
+
+      if (/关闭|禁用|turn off|disable/.test(lower)) {
+        recordChange('enabled', proposal.enabled, false, '按你的要求关闭 Goal Gate。');
+        proposal.enabled = false;
+      } else if (/启用|开启|enable|goal gate|审查|review/.test(lower)) {
+        recordChange('enabled', proposal.enabled, true, '按你的要求显式启用 Goal Gate。');
+        proposal.enabled = true;
+      }
+
+      if (/smolagents|python|agent/.test(lower)) {
+        recordChange('runner.command', proposal.runner.command, 'python', '使用 smolagents Python runner。');
+        recordChange('runner.workdir', proposal.runner.workdir, '../..', '工作目录解析到仓库根目录。');
+        recordChange('runner.args', proposal.runner.args, ['examples/smolagents/goal_reviewer.py'], '使用仓库内示例审查脚本。');
+        proposal.runner.command = 'python';
+        proposal.runner.workdir = '../..';
+        proposal.runner.args = ['examples/smolagents/goal_reviewer.py'];
+      }
+
+      if (proposal.enabled) {
+        const defaults = {
+          allowed_inputs: ['goal_state', 'work_summary', 'test_results', 'blockers', 'recent_trace'],
+          allowed_actions: ['goal.approve_complete', 'goal.reject_complete', 'goal.request_continue', 'diagnosis.note.create', 'ledger.artifact.create'],
+          max_continue_attempts: 3,
+          cooldown_seconds: 60,
+        };
+        for (const key of ['allowed_inputs', 'allowed_actions']) {
+          for (const item of defaults[key]) {
+            if (!proposal[key].includes(item)) {
+              const next = proposal[key].concat(item);
+              recordChange(key, proposal[key], next, '补齐 Goal Gate 显式默认审查范围。');
+              proposal[key] = next;
+            }
+          }
+        }
+        if (!proposal.max_continue_attempts) {
+          recordChange('max_continue_attempts', proposal.max_continue_attempts, defaults.max_continue_attempts, '使用默认继续次数上限。');
+          proposal.max_continue_attempts = defaults.max_continue_attempts;
+        }
+        if (!proposal.cooldown_seconds) {
+          recordChange('cooldown_seconds', proposal.cooldown_seconds, defaults.cooldown_seconds, '使用默认冷却窗口。');
+          proposal.cooldown_seconds = defaults.cooldown_seconds;
+        }
+
+        if (/full context|broader context|more context|complete context|完整上下文|更完整上下文|更多上下文|全部上下文/.test(lower)) {
+          for (const item of ['changed_files', 'verification_summary', 'user_goal']) {
+            if (!proposal.allowed_inputs.includes(item)) {
+              const next = proposal.allowed_inputs.concat(item);
+              recordChange('allowed_inputs', proposal.allowed_inputs, next, '你显式授权了更完整的脱敏上下文范围。');
+              proposal.allowed_inputs = next;
+            }
+          }
+        } else {
+          if (/(changed files|changed_files|变更文件|改动文件)/.test(lower) && !proposal.allowed_inputs.includes('changed_files')) {
+            const next = proposal.allowed_inputs.concat('changed_files');
+            recordChange('allowed_inputs', proposal.allowed_inputs, next, '你显式授权了 changed_files 摘要。');
+            proposal.allowed_inputs = next;
+          }
+          if (/(verification summary|verification_summary|验证摘要|部署摘要)/.test(lower) && !proposal.allowed_inputs.includes('verification_summary')) {
+            const next = proposal.allowed_inputs.concat('verification_summary');
+            recordChange('allowed_inputs', proposal.allowed_inputs, next, '你显式授权了 verification_summary。');
+            proposal.allowed_inputs = next;
+          }
+          if (/(user goal|user_goal|用户目标|原始目标)/.test(lower) && !proposal.allowed_inputs.includes('user_goal')) {
+            const next = proposal.allowed_inputs.concat('user_goal');
+            recordChange('allowed_inputs', proposal.allowed_inputs, next, '你显式授权了 user_goal。');
+            proposal.allowed_inputs = next;
+          }
+        }
+      }
+
+      if (/inject|context\.inject|注入/.test(lower) && !proposal.allowed_actions.includes('context.inject')) {
+        const next = proposal.allowed_actions.concat('context.inject');
+        recordChange('allowed_actions', proposal.allowed_actions, next, '允许 reviewer 返回 continuation patch 提案。');
+        proposal.allowed_actions = next;
+      }
+
+      const attemptMatch = message.match(/(?:最多继续|最多重试|max\s*continue\s*attempts)\D*(\d+)/i);
+      if (attemptMatch) {
+        const value = Number(attemptMatch[1]);
+        recordChange('max_continue_attempts', proposal.max_continue_attempts, value, '按你的要求设置继续上限。');
+        proposal.max_continue_attempts = value;
+      }
+
+      const cooldownMatch = message.match(/(?:冷却|间隔|cooldown)\D*(\d+)/i);
+      if (cooldownMatch) {
+        const value = Number(cooldownMatch[1]);
+        recordChange('cooldown_seconds', proposal.cooldown_seconds, value, '按你的要求设置冷却秒数。');
+        proposal.cooldown_seconds = value;
+      }
+
+      const warnings = [];
+      if (!proposal.enabled) warnings.push('Goal Gate 仍然处于关闭状态。');
+      if (!proposal.runner.command) warnings.push('还没有配置 external runner。');
+      if (/(before resume|resume hook|恢复前|继续前)/.test(lower)) {
+        warnings.push('当前这个 Goal Gate 页面仍然只开放 goal.before_complete；goal.before_resume 只是目录中已知的更广义 hook。');
+      }
+      if (/(after complete|post complete|完成后|收尾后)/.test(lower)) {
+        warnings.push('goal.after_complete 已经进入 hook 目录，但当前这个 Host 还没有把它开放成可运行的 Goal Gate 开关。');
+      }
+
+      return {
+        assistant_message: `我已经基于你的话生成了一份显式 Goal Gate 草案。${changes.length ? `本次共涉及 ${changes.length} 个字段变更。` : '这次没有检测到需要修改的字段。'} 配置不会自动生效，仍然需要你显式应用。`,
+        proposal,
+        changes,
+        warnings,
+        requires_confirmation: true,
+      };
+    }
+
+    async function askAssistant(message) {
+      if (state.apiAvailable) {
+        const response = await fetch('/api/goal-gate/config-assistant', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, config: normalizeConfig(state.currentConfig) }),
+        });
+        if (!response.ok) {
+          throw new Error(`config assistant failed: HTTP ${response.status}`);
+        }
+        return response.json();
+      }
+      return localAssistant(normalizeConfig(state.currentConfig), message);
+    }
+
+    async function sendChat() {
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      if (!message) return;
+
+      appendChat('user', message);
+      input.value = '';
+
+      try {
+        const response = await askAssistant(message);
+        state.pendingProposal = deepClone(response.proposal);
+        state.latestAssistantResponse = response;
+        appendChat('assistant', response.assistant_message, { changes: response.changes || [] });
+        renderChangeSummary();
+        updateStatuses();
+      } catch (error) {
+        appendChat('assistant', `这次生成草案失败了：${error.message}`);
+      }
+    }
+
+    async function loadBundle() {
+      if (location.protocol !== 'file:') {
+        try {
+          const response = await fetch('/api/goal-gate/bundle', { cache: 'no-store' });
+          if (response.ok) {
+            state.apiAvailable = true;
+            return await response.json();
+          }
+        } catch (_) {}
+      }
+
+      state.apiAvailable = false;
+      const response = await fetch('./goal-gate-host.bundle.example.json', { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error('Failed to load host bundle JSON. Run refresh-host-bundle.ps1 or the HTTP demo host first.');
+      }
+      return response.json();
+    }
+
+    async function loadExampleRequest() {
+      if (!state.apiAvailable || location.protocol === 'file:') {
+        return null;
+      }
+      try {
+        const response = await fetch('/api/goal-gate/example-request', { cache: 'no-store' });
+        if (!response.ok) return null;
+        return await response.json();
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function wireEvents() {
+      document.getElementById('send-chat').addEventListener('click', sendChat);
+      document.getElementById('apply-draft').addEventListener('click', applyPendingProposal);
+      document.getElementById('run-preview').addEventListener('click', runPreview);
+      document.getElementById('clear-chat').addEventListener('click', () => {
+        state.chat = [];
+        renderChat();
+        appendChat('assistant', '聊天已清空。你仍然可以继续手动编辑右侧设置，或者重新让我生成一份草案。');
+      });
+      document.getElementById('reset-config').addEventListener('click', () => {
+        state.currentConfig = deepClone(state.baseConfig);
+        state.pendingProposal = null;
+        state.latestAssistantResponse = null;
+        renderSettings(state.bundle);
+        updateConfigPreview();
+        renderChangeSummary();
+        updateStatuses();
+      });
+      document.getElementById('seed-example').addEventListener('click', () => {
+        document.getElementById('chat-input').value = localAssistantExamples[0];
+      });
+      document.getElementById('toggle-settings').addEventListener('click', () => {
+        state.settingsCollapsed = !state.settingsCollapsed;
+        renderSettings(state.bundle);
+      });
+      document.getElementById('chat-input').addEventListener('keydown', (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+          sendChat();
+        }
+      });
+    }
+
+    async function bootstrap() {
+      const bundle = await loadBundle();
+      state.bundle = bundle;
+      state.baseConfig = deepClone(bundle.examples.config);
+      state.currentConfig = deepClone(bundle.examples.config);
+      state.exampleRequest = await loadExampleRequest();
+
+      renderInteractionMetadata(bundle);
+      renderSettings(bundle);
+      updateConfigPreview();
+      renderChangeSummary();
+      renderExecutionFallback();
+      updateStatuses();
+
+      appendChat('assistant', '这里的主界面是聊天框，但聊天只负责生成显式 Goal Gate 配置草案。真正启用、保存、执行，仍然是可见且可审计的宿主动作。');
+      appendChat('assistant', state.apiAvailable
+        ? '我已经连上本地 Host API。现在你可以一边聊天生成草案，一边点“运行预览”走真实 execute-goal-gate 路径。'
+        : '当前没有连上本地 Host API，所以我会退回静态 bundle 和本地演示逻辑。需要真实执行预览时，请运行 `go run ./examples/goal-gate-host-http`。');
+
+      wireEvents();
+    }
+
+    bootstrap().catch((error) => {
+      document.body.innerHTML = `<div style="padding:32px;font-family:Segoe UI,sans-serif;color:#9b3131"><h1>UI demo failed</h1><p>${escapeHTML(error.message)}</p></div>`;
+    });
+  </script>
+</body>
+</html>

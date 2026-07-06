@@ -47,6 +47,13 @@ func DryRunProposal(s Spec, p Proposal, request []byte) (DryRunResult, error) {
 		case "session.tags.update":
 			result.SessionTags = append(result.SessionTags, output.Tags...)
 			result.AppliedActions = append(result.AppliedActions, output.Action)
+		case "goal.approve_complete", "goal.reject_complete", "goal.request_continue":
+			result.GoalActions = append(result.GoalActions, DryRunGoal{
+				Action:      output.Action,
+				Reason:      output.Reason,
+				Instruction: output.Instruction,
+			})
+			result.AppliedActions = append(result.AppliedActions, output.Action)
 		default:
 			return DryRunResult{}, fmt.Errorf("unsupported dry-run action %q", output.Action)
 		}

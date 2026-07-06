@@ -11,6 +11,15 @@ var RuleJSON string
 //go:embed gateway-harness.adapter.schema.json
 var AdapterJSON string
 
+//go:embed gateway-harness.goal-gate-config.schema.json
+var GoalGateConfigJSON string
+
+//go:embed gateway-harness.goal-gate-form.schema.json
+var GoalGateFormJSON string
+
+//go:embed gateway-harness.goal-gate-result.schema.json
+var GoalGateResultJSON string
+
 //go:embed gateway-harness.conformance.schema.json
 var ConformanceJSON string
 

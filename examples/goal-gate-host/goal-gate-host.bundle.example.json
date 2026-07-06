@@ -1,0 +1,1295 @@
+{
+  "assistant_examples": [
+    {
+      "outcome": "Generate an explicit enabled draft with python runner defaults and the minimal default review scope.",
+      "user": "Enable Goal Gate with the smolagents reviewer and keep three continue attempts."
+    },
+    {
+      "outcome": "Keep the host transparent and add only the explicit context.inject allowance to allowed_actions.",
+      "user": "Add context.inject so the reviewer may propose a continuation patch, but keep everything explicit."
+    },
+    {
+      "outcome": "Expand allowed_inputs only because the user explicitly requested a broader review scope.",
+      "user": "Authorize fuller redacted context including changed files and verification summary."
+    }
+  ],
+  "config_schema": {
+    "$id": "https://gateway-harness.dev/schema/gateway-harness.goal-gate-config.schema.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "allOf": [
+      {
+        "if": {
+          "properties": {
+            "enabled": {
+              "const": true
+            }
+          },
+          "required": [
+            "enabled"
+          ]
+        },
+        "then": {
+          "required": [
+            "hook",
+            "runner",
+            "allowed_inputs",
+            "allowed_actions"
+          ]
+        }
+      }
+    ],
+    "description": "Explicit host-side Goal Gate configuration for AI-in-the-loop goal completion review. Default-off: nothing is intercepted, injected, persisted, or sent to an external runner unless enabled here.",
+    "examples": [
+      {
+        "allowed_actions": [
+          "goal.approve_complete",
+          "goal.reject_complete",
+          "goal.request_continue",
+          "diagnosis.note.create",
+          "ledger.artifact.create"
+        ],
+        "allowed_inputs": [
+          "goal_state",
+          "work_summary",
+          "test_results",
+          "blockers",
+          "recent_trace"
+        ],
+        "cooldown_seconds": 60,
+        "enabled": false,
+        "hook": "goal.before_complete",
+        "max_continue_attempts": 3,
+        "runner": {
+          "args": [
+            "examples/smolagents/goal_reviewer.py"
+          ],
+          "command": "python",
+          "workdir": "../.."
+        }
+      }
+    ],
+    "properties": {
+      "allowed_actions": {
+        "description": "Proposal actions that the host is willing to accept from the external reviewer. Actions outside this list are rejected even if the steward spec declared them.",
+        "examples": [
+          [
+            "goal.approve_complete",
+            "goal.reject_complete",
+            "goal.request_continue"
+          ]
+        ],
+        "items": {
+          "oneOf": [
+            {
+              "const": "goal.approve_complete",
+              "description": "Allow the executor to mark the goal complete.",
+              "title": "Approve Complete"
+            },
+            {
+              "const": "goal.reject_complete",
+              "description": "Block completion because work or verification is still missing.",
+              "title": "Reject Complete"
+            },
+            {
+              "const": "goal.request_continue",
+              "description": "Return an explicit follow-up instruction when completion is rejected.",
+              "title": "Request Continue"
+            },
+            {
+              "const": "diagnosis.note.create",
+              "description": "Attach a redacted diagnostic note for audit or later review.",
+              "title": "Create Diagnosis Note"
+            },
+            {
+              "const": "ledger.artifact.create",
+              "description": "Reference a hashed external artifact in the audit ledger.",
+              "title": "Create Ledger Artifact"
+            },
+            {
+              "const": "context.inject",
+              "description": "Optional advanced action: inject explicit follow-up guidance into the next continuation step. Do not enable unless the host explicitly supports and wants it.",
+              "title": "Inject Context"
+            }
+          ],
+          "type": "string"
+        },
+        "minItems": 1,
+        "title": "Allowed Proposal Actions",
+        "type": "array",
+        "uniqueItems": true
+      },
+      "allowed_inputs": {
+        "description": "Redacted event fields that the host is allowed to pass to the external reviewer. The event is rejected if it includes undeclared inputs.",
+        "examples": [
+          [
+            "goal_state",
+            "work_summary",
+            "test_results",
+            "blockers",
+            "recent_trace"
+          ]
+        ],
+        "items": {
+          "oneOf": [
+            {
+              "const": "goal_state",
+              "description": "Required machine-readable goal status, attempt count, cooldown, and dedupe state.",
+              "title": "Goal State"
+            },
+            {
+              "const": "work_summary",
+              "description": "Short human-readable summary of what the executor claims to have completed.",
+              "title": "Work Summary"
+            },
+            {
+              "const": "test_results",
+              "description": "Redacted focused test outcomes or command summaries relevant to goal completion.",
+              "title": "Test Results"
+            },
+            {
+              "const": "blockers",
+              "description": "Outstanding blockers, gaps, or known missing verification steps.",
+              "title": "Blockers"
+            },
+            {
+              "const": "recent_trace",
+              "description": "Recent redacted execution or verification trace snippets for context.",
+              "title": "Recent Trace"
+            },
+            {
+              "const": "changed_files",
+              "description": "Relevant changed file paths or redacted file-level summaries.",
+              "title": "Changed Files"
+            },
+            {
+              "const": "verification_summary",
+              "description": "High-level summary of broader verification or deployment status.",
+              "title": "Verification Summary"
+            },
+            {
+              "const": "user_goal",
+              "description": "Original user objective or acceptance target in concise redacted form.",
+              "title": "User Goal"
+            }
+          ],
+          "type": "string"
+        },
+        "minItems": 1,
+        "title": "Allowed Event Inputs",
+        "type": "array",
+        "uniqueItems": true
+      },
+      "cooldown_seconds": {
+        "default": 0,
+        "description": "Explicit host-side default when event.goal_state omitted cooldown. Set to 0 to disable host-side cooldown by default.",
+        "examples": [
+          0,
+          60
+        ],
+        "minimum": 0,
+        "title": "Cooldown Seconds",
+        "type": "integer"
+      },
+      "enabled": {
+        "default": false,
+        "description": "Default-off switch for host-side Goal Gate interception.",
+        "title": "Enable Goal Gate",
+        "type": "boolean"
+      },
+      "hook": {
+        "description": "Explicit lifecycle hook that may invoke Goal Gate when enabled.",
+        "enum": [
+          "goal.before_complete"
+        ],
+        "examples": [
+          "goal.before_complete"
+        ],
+        "title": "Lifecycle Hook",
+        "type": "string"
+      },
+      "max_continue_attempts": {
+        "default": 0,
+        "description": "Explicit host-side default when event.goal_state omitted a limit. Set to 0 to leave the limit entirely to event.goal_state.",
+        "examples": [
+          0,
+          3
+        ],
+        "minimum": 0,
+        "title": "Max Continue Attempts",
+        "type": "integer"
+      },
+      "runner": {
+        "additionalProperties": false,
+        "description": "External command that receives the redacted Goal Gate event on stdin and must return a structured steward proposal on stdout.",
+        "examples": [
+          {
+            "args": [
+              "examples/smolagents/goal_reviewer.py"
+            ],
+            "command": "python",
+            "workdir": "../.."
+          }
+        ],
+        "properties": {
+          "args": {
+            "description": "Explicit argument list passed to the runner command.",
+            "examples": [
+              [
+                "examples/smolagents/goal_reviewer.py"
+              ],
+              [
+                "run",
+                "./cmd/goal-runner"
+              ]
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Runner Arguments",
+            "type": "array"
+          },
+          "command": {
+            "description": "Executable to launch, for example python, node, or a dedicated sidecar binary.",
+            "examples": [
+              "python",
+              "node",
+              "./goal-gate-runner"
+            ],
+            "minLength": 1,
+            "title": "Runner Command",
+            "type": "string"
+          },
+          "workdir": {
+            "description": "Explicit working directory for the external runner. Relative values should be resolved by the host against the config file location.",
+            "examples": [
+              "../..",
+              "/opt/gateway-harness"
+            ],
+            "minLength": 1,
+            "title": "Runner Working Directory",
+            "type": "string"
+          }
+        },
+        "required": [
+          "command"
+        ],
+        "title": "External Runner",
+        "type": "object"
+      }
+    },
+    "required": [
+      "enabled"
+    ],
+    "title": "Gateway Harness Goal Gate Config",
+    "type": "object"
+  },
+  "description": "Single host-facing bundle for wiring Goal Gate configuration, UI rendering, and result handling.",
+  "examples": {
+    "approve_result": {
+      "allow_complete": true,
+      "continuation_patches": [],
+      "continue_instruction": "",
+      "continue_work": false,
+      "next_goal_state": {
+        "attempt": 1,
+        "cooldown_seconds": 60,
+        "max_continue_attempts": 3,
+        "status": "complete"
+      }
+    },
+    "config": {
+      "allowed_actions": [
+        "goal.approve_complete",
+        "goal.reject_complete",
+        "goal.request_continue",
+        "diagnosis.note.create",
+        "ledger.artifact.create"
+      ],
+      "allowed_inputs": [
+        "goal_state",
+        "work_summary",
+        "test_results",
+        "blockers",
+        "recent_trace"
+      ],
+      "cooldown_seconds": 60,
+      "enabled": false,
+      "hook": "goal.before_complete",
+      "max_continue_attempts": 3,
+      "runner": {
+        "args": [
+          "examples/smolagents/goal_reviewer.py"
+        ],
+        "command": "python",
+        "workdir": "../.."
+      }
+    },
+    "failure_result": {
+      "enabled": true,
+      "failure": {
+        "code": "goal_gate_runner_failed",
+        "message": "agent command failed",
+        "runner_command": "python",
+        "stage": "runner"
+      },
+      "triggered": true
+    },
+    "reject_result": {
+      "allow_complete": false,
+      "continuation_patches": [],
+      "continue_instruction": "Deploy the image and run the smoke test.",
+      "continue_work": true,
+      "next_goal_state": {
+        "attempt": 2,
+        "cooldown_seconds": 60,
+        "last_rejection_reason_hash": "sha256:example",
+        "max_continue_attempts": 3,
+        "status": "pending_complete"
+      }
+    }
+  },
+  "form_model": {
+    "description": "Host-facing form model for explicit Goal Gate completion review configuration.",
+    "schema_ref": "https://gateway-harness.dev/schema/gateway-harness.goal-gate-config.schema.json",
+    "sections": [
+      {
+        "description": "Turn Goal Gate on explicitly and select the lifecycle hook.",
+        "fields": [
+          {
+            "control": "toggle",
+            "description": "Default-off master switch for host-side completion interception.",
+            "path": "enabled",
+            "recommended": true,
+            "required_when_enabled": false,
+            "title": "Enable Goal Gate"
+          },
+          {
+            "catalog_ref": "hook_catalog",
+            "control": "select",
+            "description": "Explicit lifecycle point where Goal Gate may run. See hook_catalog for the broader Harness hook map and localized explanations.",
+            "options": [
+              {
+                "badges": [
+                  "goal",
+                  "decision"
+                ],
+                "description": "Fires when an executor is about to mark a goal complete, so an external reviewer can decide whether completion is justified.",
+                "descriptions": {
+                  "en-US": "Fires when an executor is about to mark a goal complete, so an external reviewer can decide whether completion is justified.",
+                  "zh-CN": "在执行器准备把目标标记为完成前触发，适合 AI in the loop 审查工作是否真的闭环。"
+                },
+                "example": "Example: after tests pass, ask a reviewer whether deployment, acceptance, or regression checks are still missing.",
+                "labels": {
+                  "en-US": "Before Complete",
+                  "zh-CN": "完成前审查"
+                },
+                "title": "Before Complete",
+                "value": "goal.before_complete"
+              }
+            ],
+            "path": "hook",
+            "recommended": true,
+            "required_when_enabled": true,
+            "title": "Lifecycle Hook"
+          }
+        ],
+        "id": "activation",
+        "title": "Activation"
+      },
+      {
+        "description": "Configure the external AI reviewer process. Gateway Harness does not embed a model or agent runtime.",
+        "fields": [
+          {
+            "control": "command",
+            "description": "Executable to launch, for example python or a dedicated sidecar binary.",
+            "path": "runner.command",
+            "recommended": true,
+            "required_when_enabled": true,
+            "title": "Runner Command"
+          },
+          {
+            "control": "text",
+            "description": "Optional working directory. Relative paths should be resolved against the config file location.",
+            "path": "runner.workdir",
+            "recommended": true,
+            "required_when_enabled": false,
+            "title": "Runner Working Directory"
+          },
+          {
+            "control": "text",
+            "description": "Explicit argument list for the external runner.",
+            "path": "runner.args",
+            "recommended": true,
+            "required_when_enabled": false,
+            "title": "Runner Arguments"
+          }
+        ],
+        "id": "runner",
+        "title": "Runner"
+      },
+      {
+        "description": "Choose what redacted context the reviewer may see and what actions it may propose.",
+        "fields": [
+          {
+            "control": "multi_select",
+            "description": "Only these redacted input fields may be passed to the external reviewer. Default to the minimal summary set; broader context must be explicitly opted in.",
+            "options": [
+              {
+                "description": "Required machine-readable goal status and retry state.",
+                "title": "Goal State",
+                "value": "goal_state"
+              },
+              {
+                "description": "Concise summary of completed work.",
+                "title": "Work Summary",
+                "value": "work_summary"
+              },
+              {
+                "description": "Focused test outcomes or command summaries.",
+                "title": "Test Results",
+                "value": "test_results"
+              },
+              {
+                "description": "Known missing pieces or unresolved blockers.",
+                "title": "Blockers",
+                "value": "blockers"
+              },
+              {
+                "description": "Recent redacted execution trace snippets.",
+                "title": "Recent Trace",
+                "value": "recent_trace"
+              },
+              {
+                "description": "Relevant changed file paths or summaries.",
+                "title": "Changed Files",
+                "value": "changed_files"
+              },
+              {
+                "description": "Broader verification or deployment status.",
+                "title": "Verification Summary",
+                "value": "verification_summary"
+              },
+              {
+                "description": "Original user objective in concise redacted form.",
+                "title": "User Goal",
+                "value": "user_goal"
+              }
+            ],
+            "path": "allowed_inputs",
+            "recommended": true,
+            "required_when_enabled": true,
+            "title": "Allowed Event Inputs"
+          },
+          {
+            "control": "multi_select",
+            "description": "Only these actions may be accepted from the external reviewer.",
+            "options": [
+              {
+                "description": "Allow completion.",
+                "title": "Approve Complete",
+                "value": "goal.approve_complete"
+              },
+              {
+                "description": "Block completion.",
+                "title": "Reject Complete",
+                "value": "goal.reject_complete"
+              },
+              {
+                "description": "Return an explicit continuation instruction.",
+                "title": "Request Continue",
+                "value": "goal.request_continue"
+              },
+              {
+                "description": "Attach a redacted diagnosis note.",
+                "title": "Create Diagnosis Note",
+                "value": "diagnosis.note.create"
+              },
+              {
+                "description": "Reference a hashed artifact in the ledger.",
+                "title": "Create Ledger Artifact",
+                "value": "ledger.artifact.create"
+              },
+              {
+                "description": "Optional advanced action for explicit follow-up guidance only.",
+                "title": "Inject Context",
+                "value": "context.inject"
+              }
+            ],
+            "path": "allowed_actions",
+            "recommended": true,
+            "required_when_enabled": true,
+            "title": "Allowed Proposal Actions"
+          }
+        ],
+        "id": "review_scope",
+        "title": "Review Scope"
+      },
+      {
+        "description": "Prevent infinite continue loops and keep retries explicit.",
+        "fields": [
+          {
+            "control": "number",
+            "description": "Host-side default retry limit when the event omitted one.",
+            "path": "max_continue_attempts",
+            "recommended": true,
+            "required_when_enabled": false,
+            "title": "Max Continue Attempts"
+          },
+          {
+            "control": "number",
+            "description": "Host-side default cooldown between repeated continuation attempts.",
+            "path": "cooldown_seconds",
+            "recommended": true,
+            "required_when_enabled": false,
+            "title": "Cooldown Seconds"
+          }
+        ],
+        "id": "safety",
+        "title": "Safety Limits"
+      }
+    ],
+    "title": "Gateway Harness Goal Gate",
+    "transparency_note": "Default-off. Unless enabled here, Goal Gate must not invoke an external runner, intercept completion, inject context, or write ledger records."
+  },
+  "form_schema": {
+    "$defs": {
+      "field": {
+        "additionalProperties": false,
+        "properties": {
+          "control": {
+            "enum": [
+              "toggle",
+              "select",
+              "multi_select",
+              "text",
+              "command",
+              "number"
+            ],
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "options": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value",
+                "title"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "recommended": {
+            "type": "boolean"
+          },
+          "required_when_enabled": {
+            "type": "boolean"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "title",
+          "control"
+        ],
+        "type": "object"
+      },
+      "section": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/$defs/field"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "fields"
+        ],
+        "type": "object"
+      }
+    },
+    "$id": "https://gateway-harness.dev/schema/gateway-harness.goal-gate-form.schema.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "description": "Optional host-facing form model for rendering Goal Gate configuration without hardcoding frontend field order, grouping, or control hints.",
+    "properties": {
+      "description": {
+        "type": "string"
+      },
+      "schema_ref": {
+        "type": "string"
+      },
+      "sections": {
+        "items": {
+          "$ref": "#/$defs/section"
+        },
+        "minItems": 1,
+        "type": "array"
+      },
+      "title": {
+        "type": "string"
+      },
+      "transparency_note": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "title",
+      "description",
+      "transparency_note",
+      "schema_ref",
+      "sections"
+    ],
+    "title": "Gateway Harness Goal Gate Form Model",
+    "type": "object"
+  },
+  "hook_catalog": [
+    {
+      "family": "context",
+      "goal_gate_selectable": false,
+      "host_surfaces": [
+        "policy",
+        "steward"
+      ],
+      "id": "context.continuity_drop.detected",
+      "kind": "signal",
+      "locales": {
+        "en-US": {
+          "example": "Example: after compaction, inject a short project-constraint summary when continuity drops sharply.",
+          "summary": "Fires when the host detects a meaningful continuity loss, so policy can inject a short reminder or summary explicitly.",
+          "title": "Context Continuity Drop"
+        },
+        "zh-CN": {
+          "example": "例如：压缩后发现上下文断崖下降，再补一条简短的项目约束摘要。",
+          "summary": "当宿主检测到会话上下文明显断裂时触发，适合显式注入短摘要或连续性提醒。",
+          "title": "上下文连续性下降"
+        }
+      },
+      "supports_request_payload": true
+    },
+    {
+      "family": "request",
+      "goal_gate_selectable": false,
+      "host_surfaces": [
+        "policy",
+        "steward"
+      ],
+      "id": "request.before_model_mapping",
+      "kind": "mutation",
+      "locales": {
+        "en-US": {
+          "example": "Example: inject a stable system capsule before failover aliases or channel routing expand the model name.",
+          "summary": "Runs before the host maps a logical request model to an upstream model, which is useful for model-family-aware context programming.",
+          "title": "Request Before Model Mapping"
+        },
+        "zh-CN": {
+          "example": "例如：在 failover 或别名展开前，先按模型标签注入固定系统提示词。",
+          "summary": "在宿主把逻辑模型名映射到具体上游模型前运行，适合按逻辑模型或标签做显式上下文编程。",
+          "title": "请求模型映射前"
+        }
+      },
+      "supports_request_payload": true
+    },
+    {
+      "family": "request",
+      "goal_gate_selectable": false,
+      "host_surfaces": [
+        "policy",
+        "steward"
+      ],
+      "id": "request.before_upstream",
+      "kind": "mutation",
+      "locales": {
+        "en-US": {
+          "example": "Example: append project constraints, format instructions, or safety reminders just before forwarding.",
+          "summary": "Runs immediately before the final request leaves for the upstream provider, making it the last explicit mutation point.",
+          "title": "Request Before Upstream"
+        },
+        "zh-CN": {
+          "example": "例如：在真正转发给模型前追加项目边界、输出格式或安全提醒。",
+          "summary": "在最终请求发往上游前运行，适合做最后一层显式上下文注入或审计补丁。",
+          "title": "请求上游前"
+        }
+      },
+      "supports_request_payload": true
+    },
+    {
+      "family": "chat",
+      "goal_gate_selectable": false,
+      "host_surfaces": [
+        "policy",
+        "steward"
+      ],
+      "id": "chat.before_model_mapping",
+      "kind": "mutation",
+      "locales": {
+        "en-US": {
+          "example": "Example: add a stable language or formatting capsule for a chat-model family before routing.",
+          "summary": "Chat Completions variant of the pre-mapping hook, for explicit mutation before the host resolves the upstream model.",
+          "title": "Chat Before Model Mapping"
+        },
+        "zh-CN": {
+          "example": "例如：对某类 chat 模型统一补一条中文输出约束。",
+          "summary": "面向 Chat Completions 请求，在模型映射前做显式上下文编程。",
+          "title": "Chat 模型映射前"
+        }
+      },
+      "supports_request_payload": true
+    },
+    {
+      "family": "chat",
+      "goal_gate_selectable": false,
+      "host_surfaces": [
+        "policy",
+        "steward"
+      ],
+      "id": "chat.before_upstream",
+      "kind": "mutation",
+      "locales": {
+        "en-US": {
+          "example": "Example: add a last-mile reminder to preserve tool-call protocol before sending upstream.",
+          "summary": "Chat Completions variant of the final pre-upstream mutation point.",
+          "title": "Chat Before Upstream"
+        },
+        "zh-CN": {
+          "example": "例如：在发给上游前追加“保持工具调用协议不变”的提醒。",
+          "summary": "面向 Chat Completions 请求，在最终转发前做最后一层显式补丁。",
+          "title": "Chat 上游前"
+        }
+      },
+      "supports_request_payload": true
+    },
+    {
+      "family": "responses",
+      "goal_gate_selectable": false,
+      "host_surfaces": [
+        "policy",
+        "steward"
+      ],
+      "id": "responses.before_model_mapping",
+      "kind": "mutation",
+      "locales": {
+        "en-US": {
+          "example": "Example: inject repository constraints for a coding model family before stateful Responses routing resolves upstream.",
+          "summary": "Responses endpoint variant of the pre-mapping hook for model-aware context programming.",
+          "title": "Responses Before Model Mapping"
+        },
+        "zh-CN": {
+          "example": "例如：在 stateful Responses 路由前，为 coding 模型补充仓库约束。",
+          "summary": "面向 Responses 请求，在宿主解析具体上游模型前运行，适合基于逻辑模型名注入约束。",
+          "title": "Responses 模型映射前"
+        }
+      },
+      "supports_request_payload": true
+    },
+    {
+      "family": "responses",
+      "goal_gate_selectable": false,
+      "host_surfaces": [
+        "policy",
+        "steward"
+      ],
+      "id": "responses.before_upstream",
+      "kind": "mutation",
+      "locales": {
+        "en-US": {
+          "example": "Example: add a last-mile reminder to preserve the project goal before the request leaves the gateway.",
+          "summary": "Responses endpoint variant of the final pre-upstream mutation point.",
+          "title": "Responses Before Upstream"
+        },
+        "zh-CN": {
+          "example": "例如：在请求真正出站前，补一条保持项目目标不漂移的提醒。",
+          "summary": "面向 Responses 请求，在最终上游调用前运行，适合最后一跳的显式上下文注入。",
+          "title": "Responses 上游前"
+        }
+      },
+      "supports_request_payload": true
+    },
+    {
+      "family": "responses.compact",
+      "goal_gate_selectable": false,
+      "host_surfaces": [
+        "policy",
+        "steward"
+      ],
+      "id": "responses.compact.before_model_mapping",
+      "kind": "mutation",
+      "locales": {
+        "en-US": {
+          "example": "Example: inject a short capsule that preserves user intent and unfinished work before compact routing resolves upstream.",
+          "summary": "Compact-request variant of the pre-mapping hook, for explicit continuity handling before model routing.",
+          "title": "Compact Before Model Mapping"
+        },
+        "zh-CN": {
+          "example": "例如：在 compact 请求进上游前，统一注入“保留用户目标和未完成事项”的短摘要。",
+          "summary": "专门面向 compact/压缩请求，在模型映射前运行，适合压缩场景的显式上下文归一化。",
+          "title": "压缩请求模型映射前"
+        }
+      },
+      "supports_request_payload": true
+    },
+    {
+      "family": "responses.compact",
+      "goal_gate_selectable": false,
+      "host_surfaces": [
+        "policy",
+        "steward"
+      ],
+      "id": "responses.compact.before_upstream",
+      "kind": "mutation",
+      "locales": {
+        "en-US": {
+          "example": "Example: inject a short prompt distilled from ledger summaries whenever a compact event is emitted.",
+          "summary": "Compact-request variant of the final pre-upstream hook, useful for the last explicit continuity patch before compaction leaves the gateway.",
+          "title": "Compact Before Upstream"
+        },
+        "zh-CN": {
+          "example": "例如：每次压缩事件发生时，显式注入由账本摘要提炼出的短提示词。",
+          "summary": "专门面向 compact/压缩请求，在最终上游调用前运行，适合做最后一层连续性补丁。",
+          "title": "压缩请求上游前"
+        }
+      },
+      "supports_request_payload": true
+    },
+    {
+      "family": "goal",
+      "goal_gate_selectable": true,
+      "host_surfaces": [
+        "steward",
+        "goal_gate_host"
+      ],
+      "id": "goal.before_complete",
+      "kind": "decision",
+      "locales": {
+        "en-US": {
+          "example": "Example: after tests pass, ask a reviewer whether deployment, acceptance, or regression checks are still missing.",
+          "summary": "Fires when an executor is about to mark a goal complete, so an external reviewer can decide whether completion is justified.",
+          "title": "Before Complete"
+        },
+        "zh-CN": {
+          "example": "例如：测试刚跑完时先让外部 reviewer 判断是否还缺部署、验收或回归验证。",
+          "summary": "在执行器准备把目标标记为完成前触发，适合 AI in the loop 审查工作是否真的闭环。",
+          "title": "完成前审查"
+        }
+      },
+      "supports_request_payload": false
+    },
+    {
+      "family": "goal",
+      "goal_gate_selectable": false,
+      "host_surfaces": [
+        "steward"
+      ],
+      "id": "goal.before_resume",
+      "kind": "decision",
+      "locales": {
+        "en-US": {
+          "example": "Example: before resuming a coding task, let AI inspect blockers, goal state, and recent trace, then produce a short continuation prompt.",
+          "summary": "Fires before a rejected, paused, or compacted goal resumes, which is useful for continuity normalization before work continues.",
+          "title": "Before Resume"
+        },
+        "zh-CN": {
+          "example": "例如：继续上一轮编码前，先由 AI 检查 blockers、目标状态和最近 trace，再生成短继续提示。",
+          "summary": "在被拒绝、挂起或压缩后的目标准备恢复执行前触发，适合先归一化上下文，再决定下一步。",
+          "title": "恢复前审查"
+        }
+      },
+      "supports_request_payload": false
+    },
+    {
+      "family": "goal",
+      "goal_gate_selectable": false,
+      "host_surfaces": [
+        "steward"
+      ],
+      "id": "goal.after_complete",
+      "kind": "observation",
+      "locales": {
+        "en-US": {
+          "example": "Example: after the goal completes, generate a redacted delivery summary artifact and attach it to the ledger.",
+          "summary": "Fires after a goal is already complete, which is useful for post-completion audit, tagging, or artifact generation rather than blocking completion itself.",
+          "title": "After Complete"
+        },
+        "zh-CN": {
+          "example": "例如：goal 真正完成后，再生成一条脱敏交付摘要并挂到 ledger。",
+          "summary": "在目标已经完成后触发，适合补审计摘要、项目标签或后处理 artifact，而不是拦截完成动作本身。",
+          "title": "完成后观察"
+        }
+      },
+      "supports_request_payload": false
+    }
+  ],
+  "i18n": {
+    "default_locale": "zh-CN",
+    "supported_locales": [
+      "zh-CN",
+      "en-US"
+    ]
+  },
+  "interaction_model": {
+    "ai_config_supported": true,
+    "assistant_applies_directly": false,
+    "assistant_generates": "explicit_config_draft",
+    "manual_edit_supported": true,
+    "primary_surface": "chat_assistant",
+    "secondary_surface": "settings_form"
+  },
+  "result_schema": {
+    "$defs": {
+      "dryRunPatch": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "content_chars": {
+            "type": "integer"
+          },
+          "content_hash": {
+            "type": "string"
+          },
+          "insert_index": {
+            "type": "integer"
+          },
+          "position": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "target",
+          "insert_index",
+          "role",
+          "position",
+          "content_hash",
+          "content_chars"
+        ],
+        "type": "object"
+      },
+      "dryRunRef": {
+        "additionalProperties": false,
+        "properties": {
+          "content_hash": {
+            "type": "string"
+          },
+          "note_hash": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ref"
+        ],
+        "type": "object"
+      },
+      "failure": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "runner_args_hash": {
+            "type": "string"
+          },
+          "runner_command": {
+            "type": "string"
+          },
+          "runner_workdir": {
+            "type": "string"
+          },
+          "stage": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage",
+          "code",
+          "message"
+        ],
+        "type": "object"
+      },
+      "goalState": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt": {
+            "type": "integer"
+          },
+          "cooldown_seconds": {
+            "type": "integer"
+          },
+          "last_rejection_at_unix": {
+            "type": "integer"
+          },
+          "last_rejection_reason_hash": {
+            "type": "string"
+          },
+          "max_continue_attempts": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "outcome": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_complete": {
+            "type": "boolean"
+          },
+          "blocked_reason": {
+            "type": "string"
+          },
+          "continue_instruction": {
+            "type": "string"
+          },
+          "continue_work": {
+            "type": "boolean"
+          },
+          "cooldown_remaining_seconds": {
+            "type": "integer"
+          },
+          "decision": {
+            "enum": [
+              "approve_complete",
+              "reject_complete"
+            ],
+            "type": "string"
+          },
+          "ledger_event_action": {
+            "type": "string"
+          },
+          "ledger_event_error_code": {
+            "type": "string"
+          },
+          "ledger_event_metadata": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "ledger_event_type": {
+            "type": "string"
+          },
+          "next_goal_state": {
+            "$ref": "#/$defs/goalState"
+          },
+          "proposal_id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "rejection_reason_hash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "proposal_id",
+          "decision",
+          "allow_complete",
+          "continue_work",
+          "next_goal_state",
+          "ledger_event_type",
+          "ledger_event_action"
+        ],
+        "type": "object"
+      },
+      "review": {
+        "additionalProperties": false,
+        "properties": {
+          "applied_actions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "artifacts": {
+            "items": {
+              "$ref": "#/$defs/dryRunRef"
+            },
+            "type": "array"
+          },
+          "attempt": {
+            "type": "integer"
+          },
+          "continuation_patches": {
+            "items": {
+              "$ref": "#/$defs/dryRunPatch"
+            },
+            "type": "array"
+          },
+          "continue_allowed": {
+            "type": "boolean"
+          },
+          "continue_blocked_reason": {
+            "type": "string"
+          },
+          "continue_instruction": {
+            "type": "string"
+          },
+          "cooldown_active": {
+            "type": "boolean"
+          },
+          "cooldown_remaining_seconds": {
+            "type": "integer"
+          },
+          "cooldown_seconds": {
+            "type": "integer"
+          },
+          "decision": {
+            "enum": [
+              "approve_complete",
+              "reject_complete"
+            ],
+            "type": "string"
+          },
+          "diagnostics": {
+            "items": {
+              "$ref": "#/$defs/dryRunRef"
+            },
+            "type": "array"
+          },
+          "duplicate_reason": {
+            "type": "boolean"
+          },
+          "hook": {
+            "type": "string"
+          },
+          "max_continue_attempts": {
+            "type": "integer"
+          },
+          "next_attempt": {
+            "type": "integer"
+          },
+          "proposal_id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "rejection_reason_hash": {
+            "type": "string"
+          },
+          "steward": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "proposal_id",
+          "steward",
+          "hook",
+          "decision",
+          "continue_allowed",
+          "applied_actions"
+        ],
+        "type": "object"
+      },
+      "sidecar": {
+        "additionalProperties": false,
+        "properties": {
+          "append_record": {
+            "$ref": "gateway-harness.ledger-record.schema.json"
+          },
+          "outcome": {
+            "$ref": "#/$defs/outcome"
+          },
+          "review": {
+            "$ref": "#/$defs/review"
+          }
+        },
+        "required": [
+          "review",
+          "outcome",
+          "append_record"
+        ],
+        "type": "object"
+      }
+    },
+    "$id": "https://gateway-harness.dev/schema/gateway-harness.goal-gate-result.schema.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "description": "Explicit host-facing result contract for Goal Gate execution. Covers approve, reject/continue, and structured failure paths.",
+    "properties": {
+      "append_record": {
+        "$ref": "gateway-harness.ledger-record.schema.json"
+      },
+      "enabled": {
+        "description": "Whether Goal Gate was enabled in the host config.",
+        "type": "boolean"
+      },
+      "failure": {
+        "$ref": "#/$defs/failure"
+      },
+      "sidecar": {
+        "$ref": "#/$defs/sidecar"
+      },
+      "skipped_reason": {
+        "type": "string"
+      },
+      "triggered": {
+        "description": "Whether Goal Gate actually triggered for this execution attempt.",
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "enabled",
+      "triggered"
+    ],
+    "title": "Gateway Harness Goal Gate Result",
+    "type": "object"
+  },
+  "title": "Gateway Harness Goal Gate Host Bundle",
+  "transparency_note": "Default-off. Unless enabled by explicit host config, Goal Gate must not call an external runner, intercept completion, inject continuation context, or append ledger records."
+}

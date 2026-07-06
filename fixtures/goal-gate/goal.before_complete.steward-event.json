@@ -1,0 +1,40 @@
+{
+  "hook": "goal.before_complete",
+  "redacted": true,
+  "inputs": {
+    "goal_state": {
+      "status": "pending_complete",
+      "attempt": 1,
+      "max_continue_attempts": 3,
+      "cooldown_seconds": 60,
+      "last_rejection_reason_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "work_summary": "Focused validation for Goal Gate contract and dry-run behavior passed locally.",
+    "test_results": [
+      {
+        "command": "go test ./steward -count=1",
+        "status": "passed"
+      }
+    ],
+    "blockers": [
+      "end-to-end executor interception is not wired yet"
+    ],
+    "recent_trace": [
+      {
+        "event": "validate-steward",
+        "status": "passed"
+      },
+      {
+        "event": "dry-run-steward-proposal",
+        "status": "passed"
+      }
+    ],
+    "changed_files": [
+      "steward/validate.go",
+      "steward/dryrun.go",
+      "schema/gateway-harness.steward.schema.json"
+    ],
+    "verification_summary": "Contract validation passed, but executor-side completion gating still needs integration.",
+    "user_goal": "Finish Goal Gate safely without hidden behavior."
+  }
+}

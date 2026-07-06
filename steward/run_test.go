@@ -97,6 +97,20 @@ func TestValidateEventRejectsRawNestedContent(t *testing.T) {
 	}
 }
 
+func TestValidateGoalEventAcceptsDeclaredInputs(t *testing.T) {
+	s, err := Decode(strings.NewReader(goalGateStewardJSON))
+	if err != nil {
+		t.Fatalf("decode spec: %v", err)
+	}
+	e, _, err := DecodeEvent(strings.NewReader(goalGateEventJSON))
+	if err != nil {
+		t.Fatalf("decode event: %v", err)
+	}
+	if err := ValidateEvent(s, e); err != nil {
+		t.Fatalf("validate event: %v", err)
+	}
+}
+
 func TestStewardAgentHelperProcess(t *testing.T) {
 	if !hasArg("--steward-helper") {
 		t.Skip("helper process only")

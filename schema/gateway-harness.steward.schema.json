@@ -134,6 +134,9 @@
       "type": "string",
       "enum": [
         "context.continuity_drop.detected",
+        "goal.before_complete",
+        "goal.before_resume",
+        "goal.after_complete",
         "request.before_model_mapping",
         "request.before_upstream",
         "chat.before_model_mapping",
@@ -149,12 +152,19 @@
       "enum": [
         "adapter_capability",
         "artifact_refs",
+        "blockers",
+        "changed_files",
         "error_summary",
+        "goal_state",
         "ledger_event_metadata",
         "policy_summary",
         "redacted_trace",
+        "recent_trace",
         "session_tags",
-        "user_goal"
+        "test_results",
+        "user_goal",
+        "verification_summary",
+        "work_summary"
       ]
     },
     "outputAction": {
@@ -162,6 +172,9 @@
       "enum": [
         "context.inject",
         "diagnosis.note.create",
+        "goal.approve_complete",
+        "goal.reject_complete",
+        "goal.request_continue",
         "ledger.artifact.create",
         "session.tags.update"
       ]

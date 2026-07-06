@@ -106,6 +106,10 @@ func canonicalEventJSON(s Spec, e Event) ([]byte, error) {
 }
 
 func RunExternalAgent(ctx context.Context, s Spec, e Event, _ []byte, command string, args ...string) (Proposal, error) {
+	return RunExternalAgentInDir(ctx, s, e, command, "", args...)
+}
+
+func RunExternalAgentInDir(ctx context.Context, s Spec, e Event, command string, workdir string, args ...string) (Proposal, error) {
 	canonicalEvent, err := canonicalEventJSON(s, e)
 	if err != nil {
 		return Proposal{}, err
@@ -115,6 +119,9 @@ func RunExternalAgent(ctx context.Context, s Spec, e Event, _ []byte, command st
 	}
 
 	cmd := exec.CommandContext(ctx, command, args...)
+	if strings.TrimSpace(workdir) != "" {
+		cmd.Dir = workdir
+	}
 	cmd.Stdin = bytes.NewReader(canonicalEvent)
 	var stdout bytes.Buffer
 	cmd.Stdout = &limitedWriter{w: &stdout, remaining: maxAgentStdoutBytes}

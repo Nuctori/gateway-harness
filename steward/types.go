@@ -31,6 +31,7 @@ type Proposal struct {
 type Output struct {
 	Action       string   `json:"action"`
 	Reason       string   `json:"reason,omitempty"`
+	Instruction  string   `json:"instruction,omitempty"`
 	Role         string   `json:"role,omitempty"`
 	Position     string   `json:"position,omitempty"`
 	Text         string   `json:"text,omitempty"`
@@ -58,6 +59,7 @@ type DryRunResult struct {
 	Artifacts      []DryRunRef   `json:"artifacts,omitempty"`
 	Diagnostics    []DryRunRef   `json:"diagnostics,omitempty"`
 	SessionTags    []string      `json:"session_tags,omitempty"`
+	GoalActions    []DryRunGoal  `json:"goal_actions,omitempty"`
 }
 
 type DryRunRef struct {
@@ -76,4 +78,10 @@ type DryRunPatch struct {
 	Position     string `json:"position"`
 	ContentHash  string `json:"content_hash"`
 	ContentChars int    `json:"content_chars"`
+}
+
+type DryRunGoal struct {
+	Action      string `json:"action"`
+	Reason      string `json:"reason,omitempty"`
+	Instruction string `json:"instruction,omitempty"`
 }

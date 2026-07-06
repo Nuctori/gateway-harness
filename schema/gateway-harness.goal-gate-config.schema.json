@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gateway-harness.dev/schema/gateway-harness.goal-gate-config.schema.json",
+  "title": "Gateway Harness Goal Gate Config",
+  "description": "Explicit host-side Goal Gate configuration for AI-in-the-loop goal completion review. Default-off: nothing is intercepted, injected, persisted, or sent to an external runner unless enabled here.",
+  "type": "object",
+  "additionalProperties": false,
+  "examples": [
+    {
+      "enabled": false,
+      "hook": "goal.before_complete",
+      "runner": {
+        "command": "python",
+        "workdir": "../..",
+        "args": ["examples/smolagents/goal_reviewer.py"]
+      },
+      "allowed_inputs": [
+        "goal_state",
+        "work_summary",
+        "test_results",
+        "blockers",
+        "recent_trace"
+      ],
+      "allowed_actions": [
+        "goal.approve_complete",
+        "goal.reject_complete",
+        "goal.request_continue",
+        "diagnosis.note.create",
+        "ledger.artifact.create"
+      ],
+      "max_continue_attempts": 3,
+      "cooldown_seconds": 60
+    }
+  ],
+  "properties": {
+    "enabled": {
+      "title": "Enable Goal Gate",
+      "type": "boolean",
+      "default": false,
+      "description": "Default-off switch for host-side Goal Gate interception."
+    },
+    "hook": {
+      "title": "Lifecycle Hook",
+      "type": "string",
+      "enum": ["goal.before_complete"],
+      "description": "Explicit lifecycle hook that may invoke Goal Gate when enabled.",
+      "examples": ["goal.before_complete"]
+    },
+    "runner": {
+      "title": "External Runner",
+      "description": "External command that receives the redacted Goal Gate event on stdin and must return a structured steward proposal on stdout.",
+      "type": "object",
+      "additionalProperties": false,
+      "examples": [
+        {
+          "command": "python",
+          "workdir": "../..",
+          "args": ["examples/smolagents/goal_reviewer.py"]
+        }
+      ],
+      "properties": {
+        "command": {
+          "type": "string",
+          "title": "Runner Command",
+          "minLength": 1,
+          "description": "Executable to launch, for example python, node, or a dedicated sidecar binary.",
+          "examples": ["python", "node", "./goal-gate-runner"]
+        },
+        "workdir": {
+          "type": "string",
+          "title": "Runner Working Directory",
+          "minLength": 1,
+          "description": "Explicit working directory for the external runner. Relative values should be resolved by the host against the config file location.",
+          "examples": ["../..", "/opt/gateway-harness"]
+        },
+        "args": {
+          "title": "Runner Arguments",
+          "type": "array",
+          "description": "Explicit argument list passed to the runner command.",
+          "items": {
+            "type": "string"
+          },
+          "examples": [["examples/smolagents/goal_reviewer.py"], ["run", "./cmd/goal-runner"]]
+        }
+      },
+      "required": ["command"]
+    },
+    "allowed_inputs": {
+      "title": "Allowed Event Inputs",
+      "type": "array",
+      "description": "Redacted event fields that the host is allowed to pass to the external reviewer. The event is rejected if it includes undeclared inputs.",
+      "items": {
+        "type": "string",
+        "oneOf": [
+          {
+            "const": "goal_state",
+            "title": "Goal State",
+            "description": "Required machine-readable goal status, attempt count, cooldown, and dedupe state."
+          },
+          {
+            "const": "work_summary",
+            "title": "Work Summary",
+            "description": "Short human-readable summary of what the executor claims to have completed."
+          },
+          {
+            "const": "test_results",
+            "title": "Test Results",
+            "description": "Redacted focused test outcomes or command summaries relevant to goal completion."
+          },
+          {
+            "const": "blockers",
+            "title": "Blockers",
+            "description": "Outstanding blockers, gaps, or known missing verification steps."
+          },
+          {
+            "const": "recent_trace",
+            "title": "Recent Trace",
+            "description": "Recent redacted execution or verification trace snippets for context."
+          },
+          {
+            "const": "changed_files",
+            "title": "Changed Files",
+            "description": "Relevant changed file paths or redacted file-level summaries."
+          },
+          {
+            "const": "verification_summary",
+            "title": "Verification Summary",
+            "description": "High-level summary of broader verification or deployment status."
+          },
+          {
+            "const": "user_goal",
+            "title": "User Goal",
+            "description": "Original user objective or acceptance target in concise redacted form."
+          }
+        ]
+      },
+      "uniqueItems": true,
+      "minItems": 1,
+      "examples": [["goal_state", "work_summary", "test_results", "blockers", "recent_trace"]]
+    },
+    "allowed_actions": {
+      "title": "Allowed Proposal Actions",
+      "type": "array",
+      "description": "Proposal actions that the host is willing to accept from the external reviewer. Actions outside this list are rejected even if the steward spec declared them.",
+      "items": {
+        "type": "string",
+        "oneOf": [
+          {
+            "const": "goal.approve_complete",
+            "title": "Approve Complete",
+            "description": "Allow the executor to mark the goal complete."
+          },
+          {
+            "const": "goal.reject_complete",
+            "title": "Reject Complete",
+            "description": "Block completion because work or verification is still missing."
+          },
+          {
+            "const": "goal.request_continue",
+            "title": "Request Continue",
+            "description": "Return an explicit follow-up instruction when completion is rejected."
+          },
+          {
+            "const": "diagnosis.note.create",
+            "title": "Create Diagnosis Note",
+            "description": "Attach a redacted diagnostic note for audit or later review."
+          },
+          {
+            "const": "ledger.artifact.create",
+            "title": "Create Ledger Artifact",
+            "description": "Reference a hashed external artifact in the audit ledger."
+          },
+          {
+            "const": "context.inject",
+            "title": "Inject Context",
+            "description": "Optional advanced action: inject explicit follow-up guidance into the next continuation step. Do not enable unless the host explicitly supports and wants it."
+          }
+        ]
+      },
+      "uniqueItems": true,
+      "minItems": 1,
+      "examples": [["goal.approve_complete", "goal.reject_complete", "goal.request_continue"]]
+    },
+    "max_continue_attempts": {
+      "title": "Max Continue Attempts",
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Explicit host-side default when event.goal_state omitted a limit. Set to 0 to leave the limit entirely to event.goal_state.",
+      "examples": [0, 3]
+    },
+    "cooldown_seconds": {
+      "title": "Cooldown Seconds",
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Explicit host-side default when event.goal_state omitted cooldown. Set to 0 to disable host-side cooldown by default.",
+      "examples": [0, 60]
+    }
+  },
+  "required": ["enabled"],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "enabled": {
+            "const": true
+          }
+        },
+        "required": ["enabled"]
+      },
+      "then": {
+        "required": ["hook", "runner", "allowed_inputs", "allowed_actions"]
+      }
+    }
+  ]
+}

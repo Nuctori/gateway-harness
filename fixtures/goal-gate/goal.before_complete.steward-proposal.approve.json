@@ -1,0 +1,12 @@
+{
+  "version": "0.1",
+  "id": "proposal_goal_review_approve_001",
+  "steward": "goal-completion-reviewer",
+  "hook": "goal.before_complete",
+  "outputs": [
+    {
+      "action": "goal.approve_complete",
+      "reason": "Goal contract, event validation, and dry-run outputs match the declared steward spec."
+    }
+  ]
+}

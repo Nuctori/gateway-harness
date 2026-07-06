@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gateway-harness.dev/schema/gateway-harness.goal-gate-result.schema.json",
+  "title": "Gateway Harness Goal Gate Result",
+  "description": "Explicit host-facing result contract for Goal Gate execution. Covers approve, reject/continue, and structured failure paths.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "description": "Whether Goal Gate was enabled in the host config."
+    },
+    "triggered": {
+      "type": "boolean",
+      "description": "Whether Goal Gate actually triggered for this execution attempt."
+    },
+    "skipped_reason": {
+      "type": "string"
+    },
+    "failure": {
+      "$ref": "#/$defs/failure"
+    },
+    "sidecar": {
+      "$ref": "#/$defs/sidecar"
+    },
+    "append_record": {
+      "$ref": "gateway-harness.ledger-record.schema.json"
+    }
+  },
+  "required": ["enabled", "triggered"],
+  "$defs": {
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stage": {"type": "string"},
+        "code": {"type": "string"},
+        "message": {"type": "string"},
+        "runner_command": {"type": "string"},
+        "runner_workdir": {"type": "string"},
+        "runner_args_hash": {"type": "string"}
+      },
+      "required": ["stage", "code", "message"]
+    },
+    "dryRunRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {"type": "string"},
+        "content_hash": {"type": "string"},
+        "note_hash": {"type": "string"},
+        "ref": {"type": "string"},
+        "severity": {"type": "string"}
+      },
+      "required": ["ref"]
+    },
+    "dryRunPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "action": {"type": "string"},
+        "target": {"type": "string"},
+        "insert_index": {"type": "integer"},
+        "role": {"type": "string"},
+        "position": {"type": "string"},
+        "content_hash": {"type": "string"},
+        "content_chars": {"type": "integer"}
+      },
+      "required": ["action", "target", "insert_index", "role", "position", "content_hash", "content_chars"]
+    },
+    "goalState": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {"type": "string"},
+        "attempt": {"type": "integer"},
+        "max_continue_attempts": {"type": "integer"},
+        "cooldown_seconds": {"type": "integer"},
+        "last_rejection_reason_hash": {"type": "string"},
+        "last_rejection_at_unix": {"type": "integer"}
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "proposal_id": {"type": "string"},
+        "steward": {"type": "string"},
+        "hook": {"type": "string"},
+        "decision": {"type": "string", "enum": ["approve_complete", "reject_complete"]},
+        "reason": {"type": "string"},
+        "continue_instruction": {"type": "string"},
+        "continue_allowed": {"type": "boolean"},
+        "continue_blocked_reason": {"type": "string"},
+        "duplicate_reason": {"type": "boolean"},
+        "cooldown_active": {"type": "boolean"},
+        "cooldown_remaining_seconds": {"type": "integer"},
+        "attempt": {"type": "integer"},
+        "next_attempt": {"type": "integer"},
+        "max_continue_attempts": {"type": "integer"},
+        "cooldown_seconds": {"type": "integer"},
+        "rejection_reason_hash": {"type": "string"},
+        "applied_actions": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/dryRunRef"}
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/dryRunRef"}
+        },
+        "continuation_patches": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/dryRunPatch"}
+        }
+      },
+      "required": ["proposal_id", "steward", "hook", "decision", "continue_allowed", "applied_actions"]
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "proposal_id": {"type": "string"},
+        "decision": {"type": "string", "enum": ["approve_complete", "reject_complete"]},
+        "allow_complete": {"type": "boolean"},
+        "continue_work": {"type": "boolean"},
+        "continue_instruction": {"type": "string"},
+        "reason": {"type": "string"},
+        "blocked_reason": {"type": "string"},
+        "next_goal_state": {"$ref": "#/$defs/goalState"},
+        "ledger_event_type": {"type": "string"},
+        "ledger_event_action": {"type": "string"},
+        "ledger_event_error_code": {"type": "string"},
+        "ledger_event_metadata": {
+          "type": "object",
+          "additionalProperties": {"type": "string"}
+        },
+        "rejection_reason_hash": {"type": "string"},
+        "cooldown_remaining_seconds": {"type": "integer"}
+      },
+      "required": ["proposal_id", "decision", "allow_complete", "continue_work", "next_goal_state", "ledger_event_type", "ledger_event_action"]
+    },
+    "sidecar": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "review": {"$ref": "#/$defs/review"},
+        "outcome": {"$ref": "#/$defs/outcome"},
+        "append_record": {"$ref": "gateway-harness.ledger-record.schema.json"}
+      },
+      "required": ["review", "outcome", "append_record"]
+    }
+  }
+}

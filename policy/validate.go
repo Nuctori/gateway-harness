@@ -6,20 +6,15 @@ import (
 	"io"
 	"sort"
 	"strings"
+
+	"github.com/Nuctori/gateway-harness/hooks"
 )
 
-var SupportedHooks = map[string]bool{
-	"*":                                      true,
-	"context.continuity_drop.detected":       true,
-	"request.before_model_mapping":           true,
-	"request.before_upstream":                true,
-	"chat.before_model_mapping":              true,
-	"chat.before_upstream":                   true,
-	"responses.before_model_mapping":         true,
-	"responses.before_upstream":              true,
-	"responses.compact.before_model_mapping": true,
-	"responses.compact.before_upstream":      true,
-}
+var SupportedHooks = func() map[string]bool {
+	supported := hooks.SupportedMap()
+	supported["*"] = true
+	return supported
+}()
 
 var SupportedActions = map[string]bool{
 	"context.inject":                true,

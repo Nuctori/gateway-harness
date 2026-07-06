@@ -1,0 +1,17 @@
+{
+  "version": "0.1",
+  "id": "proposal_goal_review_reject_001",
+  "steward": "goal-completion-reviewer",
+  "hook": "goal.before_complete",
+  "outputs": [
+    {
+      "action": "goal.reject_complete",
+      "reason": "Focused contract tests passed, but executor-side completion interception is still unverified."
+    },
+    {
+      "action": "goal.request_continue",
+      "reason": "Continue by wiring the validated proposal into the real goal completion path.",
+      "instruction": "Integrate goal.before_complete into the executor lifecycle, enforce max_continue_attempts and cooldown in the sidecar, then run a request-level completion smoke test."
+    }
+  ]
+}

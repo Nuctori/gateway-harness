@@ -1,0 +1,7 @@
+{
+  "goal": {
+    "id": "goal_gate_demo",
+    "status": "pending_complete"
+  },
+  "summary": "Minimal placeholder request object for goal dry-run validation."
+}

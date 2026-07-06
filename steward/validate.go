@@ -21,17 +21,27 @@ const (
 var SupportedInputs = map[string]bool{
 	"adapter_capability":    true,
 	"artifact_refs":         true,
+	"blockers":              true,
+	"changed_files":         true,
 	"error_summary":         true,
+	"goal_state":            true,
 	"ledger_event_metadata": true,
 	"policy_summary":        true,
 	"redacted_trace":        true,
+	"recent_trace":          true,
 	"session_tags":          true,
+	"test_results":          true,
 	"user_goal":             true,
+	"verification_summary":  true,
+	"work_summary":          true,
 }
 
 var SupportedOutputActions = map[string]bool{
 	"context.inject":         true,
 	"diagnosis.note.create":  true,
+	"goal.approve_complete":  true,
+	"goal.reject_complete":   true,
+	"goal.request_continue":  true,
 	"ledger.artifact.create": true,
 	"session.tags.update":    true,
 }
@@ -214,12 +224,12 @@ func validateProposalOutput(s Spec, hook string, output Output) error {
 	}
 	switch output.Action {
 	case "context.inject":
-		if err := rejectFields(output, "artifact_type", "content_hash", "ref", "tags", "severity", "note_hash"); err != nil {
+		if err := rejectFields(output, "instruction", "artifact_type", "content_hash", "ref", "tags", "severity", "note_hash"); err != nil {
 			return err
 		}
 		return validateProposalPolicyAction(hook, output)
 	case "ledger.artifact.create":
-		if err := rejectFields(output, "role", "position", "text", "tags", "severity", "note_hash"); err != nil {
+		if err := rejectFields(output, "instruction", "role", "position", "text", "tags", "severity", "note_hash"); err != nil {
 			return err
 		}
 		if !contains(s.ArtifactTypes, output.ArtifactType) {
@@ -232,7 +242,7 @@ func validateProposalOutput(s Spec, hook string, output Output) error {
 			return fmt.Errorf("ledger.artifact.create ref is required")
 		}
 	case "diagnosis.note.create":
-		if err := rejectFields(output, "role", "position", "text", "artifact_type", "content_hash", "tags"); err != nil {
+		if err := rejectFields(output, "instruction", "role", "position", "text", "artifact_type", "content_hash", "tags"); err != nil {
 			return err
 		}
 		if strings.TrimSpace(output.NoteHash) == "" {
@@ -245,10 +255,26 @@ func validateProposalOutput(s Spec, hook string, output Output) error {
 			return fmt.Errorf("diagnosis.note.create severity is required")
 		}
 	case "session.tags.update":
-		if err := rejectFields(output, "role", "position", "text", "artifact_type", "content_hash", "ref", "severity", "note_hash"); err != nil {
+		if err := rejectFields(output, "instruction", "role", "position", "text", "artifact_type", "content_hash", "ref", "severity", "note_hash"); err != nil {
 			return err
 		}
 		return validateNonEmptyUnique("tag", output.Tags)
+	case "goal.approve_complete":
+		return rejectFields(output, "instruction", "role", "position", "text", "artifact_type", "content_hash", "ref", "tags", "severity", "note_hash")
+	case "goal.reject_complete":
+		if err := rejectFields(output, "instruction", "role", "position", "text", "artifact_type", "content_hash", "ref", "tags", "severity", "note_hash"); err != nil {
+			return err
+		}
+		if strings.TrimSpace(output.Reason) == "" {
+			return fmt.Errorf("goal.reject_complete reason is required")
+		}
+	case "goal.request_continue":
+		if err := rejectFields(output, "role", "position", "text", "artifact_type", "content_hash", "ref", "tags", "severity", "note_hash"); err != nil {
+			return err
+		}
+		if strings.TrimSpace(output.Instruction) == "" {
+			return fmt.Errorf("goal.request_continue instruction is required")
+		}
 	default:
 		return fmt.Errorf("unsupported proposal action %q", output.Action)
 	}
@@ -281,6 +307,8 @@ func rejectFields(output Output, names ...string) error {
 
 func outputFieldSet(output Output, name string) bool {
 	switch name {
+	case "instruction":
+		return strings.TrimSpace(output.Instruction) != ""
 	case "role":
 		return strings.TrimSpace(output.Role) != ""
 	case "position":

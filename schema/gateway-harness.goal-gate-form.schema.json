@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gateway-harness.dev/schema/gateway-harness.goal-gate-form.schema.json",
+  "title": "Gateway Harness Goal Gate Form Model",
+  "description": "Optional host-facing form model for rendering Goal Gate configuration without hardcoding frontend field order, grouping, or control hints.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "transparency_note": {
+      "type": "string"
+    },
+    "schema_ref": {
+      "type": "string"
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/section"
+      },
+      "minItems": 1
+    }
+  },
+  "required": ["title", "description", "transparency_note", "schema_ref", "sections"],
+  "$defs": {
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string"},
+        "title": {"type": "string"},
+        "description": {"type": "string"},
+        "fields": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/field"},
+          "minItems": 1
+        }
+      },
+      "required": ["id", "title", "fields"]
+    },
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {"type": "string"},
+        "title": {"type": "string"},
+        "control": {
+          "type": "string",
+          "enum": ["toggle", "select", "multi_select", "text", "command", "number"]
+        },
+        "required_when_enabled": {"type": "boolean"},
+        "recommended": {"type": "boolean"},
+        "description": {"type": "string"},
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "value": {"type": "string"},
+              "title": {"type": "string"},
+              "description": {"type": "string"}
+            },
+            "required": ["value", "title"]
+          }
+        }
+      },
+      "required": ["path", "title", "control"]
+    }
+  }
+}

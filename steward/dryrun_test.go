@@ -71,6 +71,36 @@ func TestDryRunProposalPreservesResponsesToolChainPrefix(t *testing.T) {
 	}
 }
 
+func TestDryRunProposalReturnsGoalActions(t *testing.T) {
+	s, err := Decode(strings.NewReader(goalGateStewardJSON))
+	if err != nil {
+		t.Fatalf("decode spec: %v", err)
+	}
+	p, err := DecodeProposal(strings.NewReader(goalGateRejectProposalJSON))
+	if err != nil {
+		t.Fatalf("decode proposal: %v", err)
+	}
+	result, err := DryRunProposal(s, p, []byte(goalGateRequestJSON))
+	if err != nil {
+		t.Fatalf("dry-run: %v", err)
+	}
+	if len(result.RequestPatches) != 0 {
+		t.Fatalf("goal actions must not mutate request patches: %+v", result.RequestPatches)
+	}
+	if len(result.GoalActions) != 2 {
+		t.Fatalf("expected two goal actions, got %+v", result.GoalActions)
+	}
+	if result.GoalActions[0].Action != "goal.reject_complete" {
+		t.Fatalf("unexpected first goal action: %+v", result.GoalActions[0])
+	}
+	if result.GoalActions[1].Action != "goal.request_continue" || result.GoalActions[1].Instruction == "" {
+		t.Fatalf("unexpected continuation goal action: %+v", result.GoalActions[1])
+	}
+	if len(result.AppliedActions) != 2 {
+		t.Fatalf("unexpected applied actions: %+v", result.AppliedActions)
+	}
+}
+
 const compactRequestJSON = `{
   "model": "gpt-5.4-mini",
   "input": [
@@ -87,4 +117,12 @@ const statefulResponsesRequestJSON = `{
     {"type": "function_call_output", "call_id": "call_1", "output": "{\"ok\":true}"},
     {"role": "user", "content": "continue"}
   ]
+}`
+
+const goalGateRequestJSON = `{
+  "goal": {
+    "id": "goal_gate_demo",
+    "status": "pending_complete"
+  },
+  "summary": "Minimal placeholder request object for goal dry-run validation."
 }`

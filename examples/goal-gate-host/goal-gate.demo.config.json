@@ -1,0 +1,25 @@
+{
+  "enabled": true,
+  "hook": "goal.before_complete",
+  "runner": {
+    "command": "go",
+    "workdir": "../..",
+    "args": ["run", "./cmd/gateway-harness/testdata/goalreviewhelper"]
+  },
+  "allowed_inputs": [
+    "goal_state",
+    "work_summary",
+    "test_results",
+    "blockers",
+    "recent_trace"
+  ],
+  "allowed_actions": [
+    "goal.approve_complete",
+    "goal.reject_complete",
+    "goal.request_continue",
+    "diagnosis.note.create",
+    "ledger.artifact.create"
+  ],
+  "max_continue_attempts": 3,
+  "cooldown_seconds": 60
+}

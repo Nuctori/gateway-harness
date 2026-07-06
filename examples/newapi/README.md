@@ -15,6 +15,26 @@ Validate the adapter capability manifest:
 gateway-harness validate-adapter examples/newapi/adapter.capability.json
 ```
 
+Print the Goal Gate host config schema and compare it with the example config:
+
+```bash
+gateway-harness goal-gate-config-schema
+gateway-harness goal-gate-form-model
+cat examples/newapi/goal-gate.config.json
+```
+
+Validate the example Goal Gate host config:
+
+```bash
+gateway-harness validate-goal-gate-config examples/newapi/goal-gate.config.json
+```
+
+Execute the Goal Gate host flow against the example fixtures:
+
+```bash
+gateway-harness execute-goal-gate examples/newapi/goal-gate.config.json fixtures/goal-gate/goal.before_complete.steward.json fixtures/goal-gate/goal.before_complete.steward-event.json fixtures/goal-gate/goal.before_complete.audit.json
+```
+
 Run online acceptance on a deployed NewAPI host after installing the `gateway-harness` CLI:
 
 ```bash
@@ -58,6 +78,8 @@ NewAPI adapter responsibilities:
 
 - Map NewAPI relay phases to Gateway Harness hooks.
 - Publish an explicit adapter capability manifest.
+- Keep Goal Gate host config explicit and default-off; the runtime config may further narrow the
+  steward spec inputs and allowed actions.
 - Convert Chat / Responses requests into mutable context objects.
 - Execute Gateway Harness actions against those objects.
 - Write redacted trace metadata into NewAPI logs.
