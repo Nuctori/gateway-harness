@@ -97,3 +97,13 @@ The current implementation intentionally stops at the contract / host-integratio
 - `context.inject` remains an explicit continuation patch suggestion, not an automatic mutation.
 
 That boundary is part of the intended design, not an incomplete stub.
+
+## CI coverage
+
+GitHub Actions now exercises the host examples as process-level e2e checks in addition to the unit
+suite:
+
+- `examples/goal-gate-host/online-e2e.test.sh`
+- `examples/goal-gate-host-http/online-e2e.test.sh`
+- `examples/newapi/online-acceptance.test.sh` as a separate mocked validation step, not a live e2e
+  run
