@@ -46,6 +46,11 @@ contract for realistic adapter flows.
   Docker port checks, redacted trace checks, failover option validation, and default failure-body
   suppression without requiring a live NewAPI host or real API token.
 
+## v0.2.5 Scope
+
+- Fixes the mock CI acceptance runner to invoke `online-acceptance.sh` through `sh`, matching the
+  documented usage and avoiding executable-bit assumptions on fresh GitHub Actions checkouts.
+
 ## v0.1.x Scope
 
 - Policy structs and validation.

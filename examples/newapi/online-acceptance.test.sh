@@ -173,7 +173,7 @@ run_acceptance() {
   POLICY_OUT="$POLICY_OUT" \
   NEWAPI_URL="http://127.0.0.1:3000/" \
   CONTAINER_NAME="new-api" \
-  "$SCRIPT_DIR/online-acceptance.sh"
+  sh "$SCRIPT_DIR/online-acceptance.sh"
 }
 
 NEWAPI_API_KEY="" NEWAPI_API_KEY_FILE="" LIVE_SMOKE=0 COMPACT_SMOKE=0 PRINT_ERROR_BODY=0 \
