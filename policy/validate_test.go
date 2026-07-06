@@ -55,6 +55,31 @@ func TestValidateRejectsUnsupportedHook(t *testing.T) {
 	}
 }
 
+func TestValidateAcceptsContinuityDropHookAndCondition(t *testing.T) {
+	p, err := Decode(strings.NewReader(`{
+		"programs": [{
+			"name": "continuity-drop",
+			"models": ["*"],
+			"steps": [{
+				"hook": "context.continuity_drop.detected",
+				"when": {"context_continuity_drop": true},
+				"do": [{
+					"action": "context.inject",
+					"role": "system",
+					"position": "after_existing_system",
+					"text": "Preserve explicit project continuity."
+				}]
+			}]
+		}]
+	}`))
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if err := Validate(p); err != nil {
+		t.Fatalf("validate: %v", err)
+	}
+}
+
 func TestValidateRejectsUnsupportedAction(t *testing.T) {
 	p, err := Decode(strings.NewReader(`{
 		"programs": [{

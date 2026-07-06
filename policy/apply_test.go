@@ -90,6 +90,26 @@ func TestApplyLedgerSummaryInjectsRequestAndRedactsTrace(t *testing.T) {
 	}
 }
 
+func TestApplyContinuityDropCanBePassedAsExplicitOption(t *testing.T) {
+	p, err := Decode(strings.NewReader(continuityDropPolicyDryRunJSON))
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	result, err := Apply(p, []byte(statefulResponsesRequestJSON), ApplyOptions{
+		Hook:                  "responses.before_upstream",
+		ContextContinuityDrop: true,
+	})
+	if err != nil {
+		t.Fatalf("apply: %v", err)
+	}
+	if len(result.AppliedActions) != 1 || result.AppliedActions[0] != "context.inject_ledger_summary" {
+		t.Fatalf("expected continuity drop apply: %+v", result.AppliedActions)
+	}
+	if strings.Contains(mustMarshalApplyResult(t, result), "Project continuity capsule") {
+		t.Fatalf("apply result leaked raw continuity capsule: %s", mustMarshalApplyResult(t, result))
+	}
+}
+
 func mustMarshalApplyResult(t *testing.T, result ApplyResult) string {
 	t.Helper()
 	encoded, err := json.Marshal(result)

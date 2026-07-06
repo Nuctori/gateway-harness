@@ -184,6 +184,11 @@ For compaction-aware adapters, `context.inject_ledger_summary` is the recommende
 The adapter or operator supplies the summary text explicitly and names the `ledger_ref` plus any
 `artifact_refs`; Gateway Harness only applies the explicit patch and records redacted provenance.
 
+Adapters that can transparently detect a sharp context drop may expose the explicit
+`context.continuity_drop.detected` hook plus `when.context_continuity_drop=true`. Gateway Harness
+validates and dry-runs that contract, but does not store raw prompts, call an AI, or recover context
+the client did not send.
+
 ## Project Layout
 
 ```text

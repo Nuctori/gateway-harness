@@ -37,6 +37,24 @@
               "text": "Project memory sentinel: preserve explicit user goals, architecture decisions, deployment constraints, open PR status, and unresolved tasks from the referenced ledger summary."
             }
           ]
+        },
+        {
+          "hook": "context.continuity_drop.detected",
+          "when": {
+            "model_matches": "*",
+            "context_continuity_drop": true
+          },
+          "do": [
+            {
+              "action": "context.inject_ledger_summary",
+              "role": "system",
+              "position": "after_existing_system",
+              "ledger_ref": "ledger://project_gateway_harness/session_codex_context_harness",
+              "artifact_refs": ["artifact_continuity_drop_1"],
+              "reason": "project continuity capsule after detected context drop",
+              "text": "Project memory sentinel: preserve explicit user goals, architecture decisions, deployment constraints, open PR status, and unresolved tasks after a detected client-side context drop."
+            }
+          ]
         }
       ]
     }

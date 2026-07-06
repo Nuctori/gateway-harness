@@ -35,6 +35,8 @@ jobs:
 
       - run: ./dist/gateway-harness dry-run-policy examples/newapi/context-harness.policy.json responses.compact.before_upstream fixtures/newapi/policy-dry-run.request.json
 
+      - run: ./dist/gateway-harness dry-run-policy examples/newapi/context-harness.policy.json context.continuity_drop.detected fixtures/newapi/policy-dry-run.request.json
+
       - run: ./dist/gateway-harness validate-adapter examples/newapi/adapter.capability.json
 
       - run: ./dist/gateway-harness validate-conformance fixtures/newapi/responses-tool-chain.conformance.json

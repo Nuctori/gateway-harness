@@ -867,6 +867,10 @@ Gateway Harness 需要避免让无意义变化破坏缓存：
 
 这样可以实现“压缩时 AI 帮我提炼、诊断卡点、重新注入短提示”，但不会把网关变成一个看不见的 AI 黑盒。
 
+如果 adapter 能用脱敏 token 统计发现“同一会话 key 的上下文断崖下降”，可以暴露
+`context.continuity_drop.detected` hook，并配合 `when.context_continuity_drop=true` 显式触发短
+Ledger 摘要注入。Gateway Harness 只校验和回放这个契约，不保存原始 prompt，不隐式调用 AI，也不能恢复客户端没有发送的完整历史。
+
 ## 不做什么
 
 v0.1 明确不做：

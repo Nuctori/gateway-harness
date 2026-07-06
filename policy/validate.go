@@ -10,6 +10,7 @@ import (
 
 var SupportedHooks = map[string]bool{
 	"*":                                      true,
+	"context.continuity_drop.detected":       true,
 	"request.before_model_mapping":           true,
 	"request.before_upstream":                true,
 	"chat.before_model_mapping":              true,

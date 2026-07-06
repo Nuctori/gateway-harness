@@ -37,13 +37,14 @@ func Apply(p Policy, request []byte, options ApplyOptions) (ApplyResult, error) 
 			Summary: TraceSummary{ContentMode: "redacted"},
 		},
 	}
+	continuityDrop := options.ContextContinuityDrop || options.Hook == "context.continuity_drop.detected"
 	for _, program := range p.Programs {
 		if !programMatchesModel(program, model) {
 			continue
 		}
 		programMatched := false
 		for _, step := range program.Steps {
-			if !stepMatchesHook(step, options.Hook) || !conditionMatches(step.When, model, options.EstimatedTokens) {
+			if !stepMatchesHook(step, options.Hook, continuityDrop) || !conditionMatches(step.When, model, options.EstimatedTokens, continuityDrop) {
 				continue
 			}
 			if !programMatched {

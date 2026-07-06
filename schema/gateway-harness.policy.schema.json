@@ -87,6 +87,7 @@
       "type": "string",
       "enum": [
         "*",
+        "context.continuity_drop.detected",
         "request.before_model_mapping",
         "request.before_upstream",
         "chat.before_model_mapping",
@@ -107,6 +108,9 @@
         "estimated_tokens_gt": {
           "type": "integer",
           "minimum": 0
+        },
+        "context_continuity_drop": {
+          "type": "boolean"
         }
       }
     },

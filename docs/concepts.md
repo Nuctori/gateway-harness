@@ -11,6 +11,7 @@ Examples:
 - `request.before_model_mapping`
 - `request.before_upstream`
 - `responses.compact.before_upstream`
+- `context.continuity_drop.detected`
 
 Hooks should be real adapter phases. Do not expose a hook in UI or schema unless an adapter can
 execute it.
@@ -37,6 +38,13 @@ Current conditions:
 
 - `model_matches`
 - `estimated_tokens_gt`
+- `context_continuity_drop`
+
+`context.continuity_drop.detected` is an explicit adapter event hook. It is intended for adapters
+that can compare a current request estimate with a prior redacted/session-affinity usage snapshot
+and determine that the client likely compacted, restarted, or otherwise sent much less context. The
+core does not perform that detection by itself, store raw prompts, or recover missing transcript
+content; it only validates and replays the policy contract when the adapter declares the event.
 
 ## Explicit Guards
 

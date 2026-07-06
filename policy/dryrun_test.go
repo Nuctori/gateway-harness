@@ -131,6 +131,27 @@ func TestDryRunLedgerSummaryPatchIsExplicitAndRedacted(t *testing.T) {
 	}
 }
 
+func TestDryRunContinuityDropHookRequiresExplicitEvent(t *testing.T) {
+	p, err := Decode(strings.NewReader(continuityDropPolicyDryRunJSON))
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	ordinary, err := DryRun(p, []byte(statefulResponsesRequestJSON), DryRunOptions{Hook: "responses.before_upstream"})
+	if err != nil {
+		t.Fatalf("ordinary dry-run: %v", err)
+	}
+	if len(ordinary.RequestPatches) != 0 {
+		t.Fatalf("ordinary hook must not match continuity drop condition: %+v", ordinary.RequestPatches)
+	}
+	drop, err := DryRun(p, []byte(statefulResponsesRequestJSON), DryRunOptions{Hook: "context.continuity_drop.detected"})
+	if err != nil {
+		t.Fatalf("drop dry-run: %v", err)
+	}
+	if len(drop.RequestPatches) != 1 || drop.RequestPatches[0].Action != "context.inject_ledger_summary" {
+		t.Fatalf("expected continuity drop ledger patch: %+v", drop.RequestPatches)
+	}
+}
+
 func TestValidateLedgerSummaryRequiresLedgerRef(t *testing.T) {
 	p, err := Decode(strings.NewReader(ledgerSummaryMissingRefPolicyJSON))
 	if err != nil {
@@ -434,6 +455,32 @@ const truncateWithInjectFieldsPolicyJSON = `{
               "text": "Truncate should not carry inject text.",
               "ledger_ref": "ledger://project/session",
               "keep_last_messages": 8
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}`
+
+const continuityDropPolicyDryRunJSON = `{
+  "programs": [
+    {
+      "name": "continuity-drop",
+      "models": ["*"],
+      "steps": [
+        {
+          "hook": "context.continuity_drop.detected",
+          "when": {"context_continuity_drop": true},
+          "do": [
+            {
+              "action": "context.inject_ledger_summary",
+              "role": "system",
+              "position": "after_existing_system",
+              "ledger_ref": "ledger://project/session/current",
+              "artifact_refs": ["artifact_continuity_drop_1"],
+              "reason": "project continuity capsule after detected context drop",
+              "text": "Project continuity capsule: preserve explicit goals and unresolved tasks."
             }
           ]
         }

@@ -36,13 +36,14 @@ func DryRun(p Policy, request []byte, options DryRunOptions) (DryRunResult, erro
 		Model:           model,
 		EstimatedTokens: options.EstimatedTokens,
 	}
+	continuityDrop := options.ContextContinuityDrop || options.Hook == "context.continuity_drop.detected"
 	for _, program := range p.Programs {
 		if !programMatchesModel(program, model) {
 			continue
 		}
 		programMatched := false
 		for _, step := range program.Steps {
-			if !stepMatchesHook(step, options.Hook) || !conditionMatches(step.When, model, options.EstimatedTokens) {
+			if !stepMatchesHook(step, options.Hook, continuityDrop) || !conditionMatches(step.When, model, options.EstimatedTokens, continuityDrop) {
 				continue
 			}
 			if !programMatched {
@@ -86,21 +87,41 @@ func programMatchesModel(program Program, model string) bool {
 	return false
 }
 
-func stepMatchesHook(step Step, hook string) bool {
+func stepMatchesHook(step Step, hook string, continuityDrop bool) bool {
 	for _, candidate := range EffectiveHooks(step) {
 		if candidate == "*" || candidate == hook {
 			return true
+		}
+		if candidate == "context.continuity_drop.detected" {
+			return continuityDrop && isBeforeUpstreamHook(hook)
 		}
 	}
 	return false
 }
 
-func conditionMatches(condition Condition, model string, estimatedTokens int) bool {
+func isBeforeUpstreamHook(hook string) bool {
+	switch hook {
+	case "request.before_upstream",
+		"chat.before_upstream",
+		"responses.before_upstream",
+		"responses.compact.before_upstream":
+		return true
+	default:
+		return false
+	}
+}
+
+func conditionMatches(condition Condition, model string, estimatedTokens int, continuityDrop bool) bool {
 	if strings.TrimSpace(condition.ModelMatches) != "" && !globMatches(condition.ModelMatches, model) {
 		return false
 	}
 	if condition.EstimatedTokensGT > 0 {
-		return estimatedTokens > condition.EstimatedTokensGT
+		if estimatedTokens <= condition.EstimatedTokensGT {
+			return false
+		}
+	}
+	if condition.ContextContinuityDrop && !continuityDrop {
+		return false
 	}
 	return true
 }

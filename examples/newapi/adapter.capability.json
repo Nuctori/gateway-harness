@@ -2,6 +2,7 @@
   "version": "0.2",
   "adapter": "newapi",
   "hooks": [
+    "context.continuity_drop.detected",
     "request.before_model_mapping",
     "request.before_upstream",
     "chat.before_model_mapping",

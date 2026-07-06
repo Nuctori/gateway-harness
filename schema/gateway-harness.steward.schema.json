@@ -153,6 +153,7 @@
     "explicitHook": {
       "type": "string",
       "enum": [
+        "context.continuity_drop.detected",
         "request.before_model_mapping",
         "request.before_upstream",
         "chat.before_model_mapping",

@@ -22,8 +22,9 @@ type Step struct {
 }
 
 type Condition struct {
-	ModelMatches      string `json:"model_matches,omitempty"`
-	EstimatedTokensGT int    `json:"estimated_tokens_gt,omitempty"`
+	ModelMatches          string `json:"model_matches,omitempty"`
+	EstimatedTokensGT     int    `json:"estimated_tokens_gt,omitempty"`
+	ContextContinuityDrop bool   `json:"context_continuity_drop,omitempty"`
 }
 
 type Action struct {
@@ -48,9 +49,10 @@ type Summary struct {
 }
 
 type DryRunOptions struct {
-	Hook            string
-	Model           string
-	EstimatedTokens int
+	Hook                  string
+	Model                 string
+	EstimatedTokens       int
+	ContextContinuityDrop bool
 }
 
 type DryRunResult struct {
@@ -85,9 +87,10 @@ type Skipped struct {
 }
 
 type ApplyOptions struct {
-	Hook            string
-	Model           string
-	EstimatedTokens int
+	Hook                  string
+	Model                 string
+	EstimatedTokens       int
+	ContextContinuityDrop bool
 }
 
 type ApplyResult struct {

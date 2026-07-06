@@ -51,6 +51,17 @@ contract for realistic adapter flows.
 - Fixes the mock CI acceptance runner to invoke `online-acceptance.sh` through `sh`, matching the
   documented usage and avoiding executable-bit assumptions on fresh GitHub Actions checkouts.
 
+## v0.2.6 Scope
+
+- Adds the explicit `context.continuity_drop.detected` adapter event hook and
+  `when.context_continuity_drop=true` condition.
+- Keeps continuity-drop handling transparent: adapters provide the event signal, policies decide
+  whether to inject, and Gateway Harness does not store raw prompts, call an AI, truncate context,
+  or recover transcript content the client did not send.
+- Updates policy, adapter, and steward schemas so WebUIs and CLIs share the same contract.
+- Extends the NewAPI example policy, adapter capability manifest, CI dry-run path, and docs for
+  the continuity-drop ledger sentinel.
+
 ## v0.1.x Scope
 
 - Policy structs and validation.
