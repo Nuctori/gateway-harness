@@ -144,6 +144,12 @@ gateway-harness validate-ledger fixtures/newapi/project-session.ledger.json
 gateway-harness explain-ledger fixtures/newapi/project-session.ledger.json
 ```
 
+按 project、session、tag 或 event type 查询持久化 ledger：
+
+```bash
+gateway-harness query-ledger fixtures/newapi/project-session.ledger.json -tag adapter:newapi -tag domain:coding -event-type compact
+```
+
 打印 ledger schema：
 
 ```bash
@@ -197,6 +203,7 @@ Conformance fixture 验证的是 Gateway Harness 契约、adapter capability 和
 `replay-policy-conformance` 会更进一步：先把 policy 应用到请求副本，再把改写后的请求发到本地 fake upstream，只输出请求大小和脱敏 trace。它适合放进 CI，用来证明 adapter 风格的真实改写没有破坏协议形态，也没有把原始 prompt 或原始注入文本写进日志输出。
 
 Ledger 验证的是“项目/会话/事件/摘要 artifact”这层审计边界。它不保存原始对话内容，只保存事件元数据、`content_hash` 和外部引用，方便后续接 sidecar、SQLite、对象存储或向量索引。Metadata 只适合放标签和 ID；`prompt`、`response`、`messages` 这类明显承载原文的 key 会被拒绝。
+`query-ledger` 让这些持久化 session 可以按项目、会话、标签和事件类型检索，但输出仍只包含 session 元数据、事件计数、命中的 event id 和 artifact id，不做原文搜索。
 
 Steward 验证的是“AI 可以参与上下文管理”的显式边界。它可以声明在 compact、failover 或诊断 hook 上唤起 AI，但必须使用显式 hook、脱敏输入、结构化输出、可校验 action 和带 hash 的 artifact。Gateway Harness core 不会因为存在 steward schema 就默认调用 AI；实际调用必须由 adapter 或 sidecar 明确实现。
 

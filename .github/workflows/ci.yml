@@ -49,6 +49,8 @@ jobs:
 
       - run: ./dist/gateway-harness explain-ledger fixtures/newapi/project-session.ledger.json
 
+      - run: ./dist/gateway-harness query-ledger fixtures/newapi/project-session.ledger.json -tag adapter:newapi -tag domain:coding -event-type compact
+
       - run: ./dist/gateway-harness ledger-schema > /tmp/gateway-harness.ledger.schema.json
 
       - run: ./dist/gateway-harness validate-steward fixtures/newapi/compact-context.steward.json

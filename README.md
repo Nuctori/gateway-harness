@@ -92,6 +92,12 @@ Explain a ledger:
 gateway-harness explain-ledger fixtures/newapi/project-session.ledger.json
 ```
 
+Query persisted project/session ledger entries by project, session, tag, or event type:
+
+```bash
+gateway-harness query-ledger fixtures/newapi/project-session.ledger.json -tag adapter:newapi -tag domain:coding -event-type compact
+```
+
 Print the ledger schema:
 
 ```bash
@@ -152,6 +158,8 @@ leaking raw prompts or raw injected text.
 Ledger files validate the audit boundary for project/session history. They intentionally store event
 metadata, content hashes, and artifact references, not raw prompts or raw model outputs. Metadata is
 for labels and IDs; obvious raw-content keys such as `prompt`, `response`, and `messages` are rejected.
+`query-ledger` makes persisted sessions searchable by project, session, tag, or event type while
+returning only session metadata, event counts, matched event IDs, and artifact IDs.
 
 Steward specs validate AI-in-the-loop context management. A steward can be configured for compact,
 failover, or diagnostic hooks, but it must use explicit hooks, redacted inputs, structured outputs,

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"strconv"
@@ -116,6 +117,13 @@ func main() {
 			os.Exit(1)
 		}
 		printLedgerSummary(l)
+	case "query-ledger":
+		l, options := mustLoadLedgerQuery(os.Args[2:])
+		if err := ledger.Validate(l); err != nil {
+			fmt.Fprintf(os.Stderr, "invalid ledger: %v\n", err)
+			os.Exit(1)
+		}
+		printJSON(ledger.Query(l, options))
 	case "ledger-schema":
 		fmt.Print(schema.LedgerJSON)
 	case "validate-steward":
@@ -261,6 +269,7 @@ Usage:
   gateway-harness conformance-schema
   gateway-harness validate-ledger <ledger.json>
   gateway-harness explain-ledger <ledger.json>
+  gateway-harness query-ledger <ledger.json> [-project <id>] [-session <id>] [-tag <tag>] [-event-type <type>]
   gateway-harness ledger-schema
   gateway-harness validate-steward <steward.json>
   gateway-harness explain-steward <steward.json>
@@ -333,6 +342,52 @@ func mustLoadLedger(path string) ledger.Ledger {
 		os.Exit(1)
 	}
 	return l
+}
+
+func mustLoadLedgerQuery(args []string) (ledger.Ledger, ledger.QueryOptions) {
+	path := ""
+	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
+		path = args[0]
+		args = args[1:]
+	}
+	flags := flag.NewFlagSet("query-ledger", flag.ExitOnError)
+	projectID := flags.String("project", "", "project id")
+	sessionID := flags.String("session", "", "session id")
+	tags := stringListFlag{}
+	eventTypes := stringListFlag{}
+	flags.Var(&tags, "tag", "required project or session tag; repeat for all-of matching")
+	flags.Var(&eventTypes, "event-type", "required event type; repeat for any-of matching")
+	if err := flags.Parse(args); err != nil {
+		fmt.Fprintf(os.Stderr, "query-ledger: %v\n", err)
+		os.Exit(2)
+	}
+	if path == "" && flags.NArg() == 1 {
+		path = flags.Arg(0)
+	}
+	if path == "" || flags.NArg() > 1 {
+		usage()
+		os.Exit(2)
+	}
+	return mustLoadLedger(path), ledger.QueryOptions{
+		ProjectID:  *projectID,
+		SessionID:  *sessionID,
+		Tags:       tags,
+		EventTypes: eventTypes,
+	}
+}
+
+type stringListFlag []string
+
+func (f *stringListFlag) String() string {
+	return strings.Join(*f, ",")
+}
+
+func (f *stringListFlag) Set(value string) error {
+	value = strings.TrimSpace(value)
+	if value != "" {
+		*f = append(*f, value)
+	}
+	return nil
 }
 
 func mustLoadStewardSpec(path string) steward.Spec {
