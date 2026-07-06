@@ -59,7 +59,13 @@ jobs:
 
       - run: ./dist/gateway-harness query-ledger fixtures/newapi/project-session.ledger.json -tag adapter:newapi -tag domain:coding -event-type compact
 
+      - run: ./dist/gateway-harness append-ledger-record /tmp/gateway-harness-runtime.ledger.json fixtures/newapi/continuity-drop.append-record.json
+
+      - run: ./dist/gateway-harness query-ledger /tmp/gateway-harness-runtime.ledger.json -tag continuity:drop -event-type compact
+
       - run: ./dist/gateway-harness ledger-schema > /tmp/gateway-harness.ledger.schema.json
+
+      - run: ./dist/gateway-harness ledger-record-schema > /tmp/gateway-harness.ledger-record.schema.json
 
       - run: ./dist/gateway-harness validate-steward fixtures/newapi/compact-context.steward.json
 

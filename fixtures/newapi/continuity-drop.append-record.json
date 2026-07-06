@@ -1,0 +1,40 @@
+{
+  "project": {
+    "id": "project_gateway_harness",
+    "name": "Gateway Harness",
+    "tags": ["repo:gateway-harness", "adapter:newapi"]
+  },
+  "session": {
+    "id": "session_codex_context_harness",
+    "title": "Codex context harness work",
+    "started_at": "2026-07-06T04:00:00Z",
+    "tags": ["domain:coding", "continuity:drop"]
+  },
+  "artifacts": [
+    {
+      "id": "artifact_continuity_drop_summary_1",
+      "type": "compact_summary",
+      "content_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "ref": "memory://summaries/session_codex_context_harness/continuity_drop_1",
+      "metadata": {
+        "source": "steward.redacted_summary"
+      }
+    }
+  ],
+  "event": {
+    "id": "evt_continuity_drop_1",
+    "type": "compact",
+    "at": "2026-07-06T04:01:00Z",
+    "request_shape": "responses",
+    "model": "gpt-5.5",
+    "hook": "context.continuity_drop.detected",
+    "action": "context.inject_ledger_summary",
+    "trace_hash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "artifact_refs": ["artifact_continuity_drop_summary_1"],
+    "metadata": {
+      "previous_prompt_tokens": "237872",
+      "current_prompt_tokens": "22467",
+      "retained_percent": "9"
+    }
+  }
+}

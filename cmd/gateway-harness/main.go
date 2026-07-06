@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -124,8 +125,24 @@ func main() {
 			os.Exit(1)
 		}
 		printJSON(ledger.Query(l, options))
+	case "append-ledger-record":
+		if len(os.Args) != 4 {
+			usage()
+			os.Exit(2)
+		}
+		l := mustLoadLedgerIfExists(os.Args[2])
+		record := mustLoadLedgerAppendRecord(os.Args[3])
+		next, result, err := ledger.Append(l, record)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "append ledger record failed: %v\n", err)
+			os.Exit(1)
+		}
+		mustWriteJSONFile(os.Args[2], next)
+		printJSON(result)
 	case "ledger-schema":
 		fmt.Print(schema.LedgerJSON)
+	case "ledger-record-schema":
+		fmt.Print(schema.LedgerRecordJSON)
 	case "validate-steward":
 		if len(os.Args) != 3 {
 			usage()
@@ -270,7 +287,9 @@ Usage:
   gateway-harness validate-ledger <ledger.json>
   gateway-harness explain-ledger <ledger.json>
   gateway-harness query-ledger <ledger.json> [-project <id>] [-session <id>] [-tag <tag>] [-event-type <type>]
+  gateway-harness append-ledger-record <ledger.json> <append-record.json>
   gateway-harness ledger-schema
+  gateway-harness ledger-record-schema
   gateway-harness validate-steward <steward.json>
   gateway-harness explain-steward <steward.json>
   gateway-harness steward-schema
@@ -344,6 +363,25 @@ func mustLoadLedger(path string) ledger.Ledger {
 	return l
 }
 
+func mustLoadLedgerIfExists(path string) ledger.Ledger {
+	file, err := os.Open(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return ledger.Ledger{Version: "0.3", Projects: []ledger.Project{}}
+		}
+		fmt.Fprintf(os.Stderr, "open ledger: %v\n", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	l, err := ledger.Decode(file)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "decode ledger: %v\n", err)
+		os.Exit(1)
+	}
+	return l
+}
+
 func mustLoadLedgerQuery(args []string) (ledger.Ledger, ledger.QueryOptions) {
 	path := ""
 	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
@@ -374,6 +412,22 @@ func mustLoadLedgerQuery(args []string) (ledger.Ledger, ledger.QueryOptions) {
 		Tags:       tags,
 		EventTypes: eventTypes,
 	}
+}
+
+func mustLoadLedgerAppendRecord(path string) ledger.AppendRecord {
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "open ledger append record: %v\n", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	record, err := ledger.DecodeAppendRecord(file)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "decode ledger append record: %v\n", err)
+		os.Exit(1)
+	}
+	return record
 }
 
 type stringListFlag []string
@@ -429,6 +483,43 @@ func mustReadFile(label string, path string) []byte {
 		os.Exit(1)
 	}
 	return data
+}
+
+func mustWriteJSONFile(path string, value any) {
+	data, err := json.MarshalIndent(value, "", "  ")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "encode json: %v\n", err)
+		os.Exit(1)
+	}
+	data = append(data, '\n')
+
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0750); err != nil {
+		fmt.Fprintf(os.Stderr, "create parent directory: %v\n", err)
+		os.Exit(1)
+	}
+	temp, err := os.CreateTemp(dir, ".gateway-harness-*.tmp")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "create temp file: %v\n", err)
+		os.Exit(1)
+	}
+	tempName := temp.Name()
+	if _, err := temp.Write(data); err != nil {
+		_ = temp.Close()
+		_ = os.Remove(tempName)
+		fmt.Fprintf(os.Stderr, "write temp file: %v\n", err)
+		os.Exit(1)
+	}
+	if err := temp.Close(); err != nil {
+		_ = os.Remove(tempName)
+		fmt.Fprintf(os.Stderr, "close temp file: %v\n", err)
+		os.Exit(1)
+	}
+	if err := replaceFile(tempName, path); err != nil {
+		_ = os.Remove(tempName)
+		fmt.Fprintf(os.Stderr, "replace ledger file: %v\n", err)
+		os.Exit(1)
+	}
 }
 
 func printSummary(p policy.Policy) {

@@ -61,7 +61,7 @@ v0.2 是一个可发布、可 CI 验收的契约版本：
 - AI-in-the-loop steward proposal validation。
 - AI-in-the-loop steward proposal dry-run。
 - JSON Schema。
-- CLI：`validate`、`explain`、`schema`、`dry-run-policy`、`validate-adapter`、`explain-adapter`、`adapter-schema`、`validate-conformance`、`explain-conformance`、`replay-conformance`、`replay-policy-conformance`、`conformance-schema`、`validate-ledger`、`explain-ledger`、`query-ledger`、`ledger-schema`、`validate-steward`、`explain-steward`、`steward-schema`、`validate-steward-proposal`、`explain-steward-proposal`、`steward-proposal-schema`、`dry-run-steward-proposal`。
+- CLI：`validate`、`explain`、`schema`、`dry-run-policy`、`validate-adapter`、`explain-adapter`、`adapter-schema`、`validate-conformance`、`explain-conformance`、`replay-conformance`、`replay-policy-conformance`、`conformance-schema`、`validate-ledger`、`explain-ledger`、`query-ledger`、`append-ledger-record`、`ledger-schema`、`ledger-record-schema`、`validate-steward`、`explain-steward`、`steward-schema`、`validate-steward-proposal`、`explain-steward-proposal`、`steward-proposal-schema`、`dry-run-steward-proposal`。
 - NewAPI adapter contract 文档。
 - NewAPI 示例 policy。
 - Release 产物：Linux amd64、Linux arm64、Linux armv7、Windows amd64。
@@ -157,10 +157,22 @@ gateway-harness explain-ledger fixtures/newapi/project-session.ledger.json
 gateway-harness query-ledger fixtures/newapi/project-session.ledger.json -tag adapter:newapi -tag domain:coding -event-type compact
 ```
 
+把一个显式、脱敏的事件 record 追加进项目/会话 ledger；目标 ledger、project 或 session 不存在时会创建：
+
+```bash
+gateway-harness append-ledger-record runtime/project-session.ledger.json fixtures/newapi/continuity-drop.append-record.json
+```
+
 打印 ledger schema：
 
 ```bash
 gateway-harness ledger-schema
+```
+
+打印 ledger append-record schema：
+
+```bash
+gateway-harness ledger-record-schema
 ```
 
 验证 AI steward spec：
@@ -219,6 +231,7 @@ Conformance fixture 验证的是 Gateway Harness 契约、adapter capability 和
 
 Ledger 验证的是“项目/会话/事件/摘要 artifact”这层审计边界。它不保存原始对话内容，只保存事件元数据、`content_hash` 和外部引用，方便后续接 sidecar、SQLite、对象存储或向量索引。Metadata 只适合放标签和 ID；`prompt`、`response`、`messages` 这类明显承载原文的 key 会被拒绝。
 `query-ledger` 让这些持久化 session 可以按项目、会话、标签和事件类型检索，但输出仍只包含 session 元数据、事件计数、命中的 event id 和 artifact id，不做原文搜索。
+`append-ledger-record` 是适配器和 sidecar 的最小持久化原语：它原子追加一个显式事件和可选的 hash artifact，可以创建 project/session 边界，但仍会拒绝 raw prompt/response 元数据，并在写回前校验完整 ledger。
 
 Steward 验证的是“AI 可以参与上下文管理”的显式边界。它可以声明在 compact、failover 或诊断 hook 上唤起 AI，但必须使用显式 hook、脱敏输入、结构化输出、可校验 action 和带 hash 的 artifact。Gateway Harness core 不会因为存在 steward schema 就默认调用 AI；实际调用必须由 adapter 或 sidecar 明确实现。
 
@@ -913,6 +926,7 @@ Gateway Harness 独立发布。
 - `gateway-harness.adapter.schema.json`。
 - `gateway-harness.conformance.schema.json`。
 - `gateway-harness.ledger.schema.json`。
+- `gateway-harness.ledger-record.schema.json`。
 - `gateway-harness.steward.schema.json`。
 - `gateway-harness.steward-proposal.schema.json`。
 - checksums。

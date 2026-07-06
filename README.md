@@ -98,10 +98,23 @@ Query persisted project/session ledger entries by project, session, tag, or even
 gateway-harness query-ledger fixtures/newapi/project-session.ledger.json -tag adapter:newapi -tag domain:coding -event-type compact
 ```
 
+Append an explicit redacted event record into a project/session ledger, creating the ledger,
+project, or session if needed:
+
+```bash
+gateway-harness append-ledger-record runtime/project-session.ledger.json fixtures/newapi/continuity-drop.append-record.json
+```
+
 Print the ledger schema:
 
 ```bash
 gateway-harness ledger-schema
+```
+
+Print the ledger append-record schema:
+
+```bash
+gateway-harness ledger-record-schema
 ```
 
 Validate an AI steward spec:
@@ -160,6 +173,10 @@ metadata, content hashes, and artifact references, not raw prompts or raw model 
 for labels and IDs; obvious raw-content keys such as `prompt`, `response`, and `messages` are rejected.
 `query-ledger` makes persisted sessions searchable by project, session, tag, or event type while
 returning only session metadata, event counts, matched event IDs, and artifact IDs.
+`append-ledger-record` is the minimal persistence primitive for adapters and sidecars: it atomically
+adds one explicit event plus optional hashed artifacts to a ledger file. It can create a project or
+session boundary, but it still rejects raw prompt/response metadata and validates the full ledger
+after the append.
 
 Steward specs validate AI-in-the-loop context management. A steward can be configured for compact,
 failover, or diagnostic hooks, but it must use explicit hooks, redacted inputs, structured outputs,
@@ -213,6 +230,7 @@ The main project should publish:
 - `gateway-harness.adapter.schema.json`.
 - `gateway-harness.conformance.schema.json`.
 - `gateway-harness.ledger.schema.json`.
+- `gateway-harness.ledger-record.schema.json`.
 - `gateway-harness.steward.schema.json`.
 - `gateway-harness.steward-proposal.schema.json`.
 - Checksums.

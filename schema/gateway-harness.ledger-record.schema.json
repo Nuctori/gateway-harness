@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Nuctori/gateway-harness/main/schema/gateway-harness.ledger-record.schema.json",
+  "title": "Gateway Harness Ledger Append Record",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "name": {"type": "string"},
+        "tags": {"$ref": "gateway-harness.ledger.schema.json#/$defs/tags"}
+      },
+      "required": ["id"]
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "title": {"type": "string"},
+        "started_at": {"type": "string", "format": "date-time"},
+        "tags": {"$ref": "gateway-harness.ledger.schema.json#/$defs/tags"}
+      },
+      "required": ["id"]
+    },
+    "event": {
+      "$ref": "gateway-harness.ledger.schema.json#/$defs/event"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "gateway-harness.ledger.schema.json#/$defs/artifact"
+      }
+    }
+  },
+  "required": ["project", "session", "event"]
+}

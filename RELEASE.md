@@ -14,6 +14,8 @@ contract for realistic adapter flows.
 - Policy-apply conformance replay, proving that a policy mutation preserves the request shape before
   it reaches an adapter upstream.
 - Project/session ledger query by project, session, tag, and event type via `query-ledger`.
+- Project/session ledger append primitive via `append-ledger-record`, with atomic file replacement,
+  project/session creation, full validation, and raw prompt/response metadata rejection.
 - AI steward proposal validation and dry-run against request copies.
 - CI coverage for NewAPI example policy, adapter capability, conformance replay, ledger query,
   steward specs, and steward proposals.
@@ -73,7 +75,8 @@ contract for realistic adapter flows.
 - JSON Schema for editor and WebUI integration.
 - CLI commands: `validate`, `explain`, `schema`, `validate-adapter`, `explain-adapter`, `adapter-schema`,
   `validate-conformance`, `explain-conformance`, `replay-conformance`, `conformance-schema`,
-  `validate-ledger`, `explain-ledger`, `query-ledger`, `ledger-schema`, `validate-steward`, `explain-steward`,
+  `validate-ledger`, `explain-ledger`, `query-ledger`, `append-ledger-record`, `ledger-schema`,
+  `ledger-record-schema`, `validate-steward`, `explain-steward`,
   `steward-schema`, `validate-steward-proposal`, `explain-steward-proposal`, and
   `steward-proposal-schema`, `dry-run-policy`, `replay-policy-conformance`, and
   `dry-run-steward-proposal`.
