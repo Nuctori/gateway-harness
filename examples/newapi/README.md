@@ -25,6 +25,22 @@ The script validates the live `context_harness.policy`, checks that ledger-summa
 explicit, rejects hidden `budget` / `context.truncate` policy fields, verifies model failover options,
 checks NewAPI HTTP health, and ensures the NewAPI container is not publishing port 80.
 
+To additionally prove the live relay path emits redacted harness trace metadata, provide a NewAPI
+token explicitly:
+
+```bash
+NEWAPI_API_KEY=sk-... sh examples/newapi/online-acceptance.sh
+```
+
+Compact smoke is opt-in because it may consume upstream quota:
+
+```bash
+NEWAPI_API_KEY=sk-... COMPACT_SMOKE=1 sh examples/newapi/online-acceptance.sh
+```
+
+The script never discovers tokens from the database and never prints the token. Use
+`NEWAPI_API_KEY_FILE=/path/to/token` if you prefer not to put the token in shell history.
+
 NewAPI adapter responsibilities:
 
 - Map NewAPI relay phases to Gateway Harness hooks.

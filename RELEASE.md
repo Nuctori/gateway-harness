@@ -25,6 +25,15 @@ contract for realistic adapter flows.
   Gateway Harness policy validation, ledger-summary hook coverage, hidden budget/truncate rejection,
   failover option checks, HTTP health, and Docker port checks.
 
+## v0.2.2 Scope
+
+- Extends the NewAPI online acceptance script with optional live smoke tests.
+- When `NEWAPI_API_KEY` or `NEWAPI_API_KEY_FILE` is explicitly provided, the script sends a minimal
+  `/v1/responses` request and verifies redacted `context_harness` trace metadata in Docker logs.
+- `COMPACT_SMOKE=1` explicitly enables `/v1/responses/compact` smoke and matching compact trace
+  validation. Compact smoke is opt-in because it may consume upstream quota.
+- The script does not discover tokens from the NewAPI database and does not print token values.
+
 ## v0.1.x Scope
 
 - Policy structs and validation.
