@@ -84,6 +84,18 @@ func main() {
 			os.Exit(1)
 		}
 		printJSON(compiled)
+	case "compile-rule-stewards":
+		if len(os.Args) != 3 {
+			usage()
+			os.Exit(2)
+		}
+		r := mustLoadRuleDocument(os.Args[2])
+		specs, err := rule.CompileStewards(r)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "compile rule stewards failed: %v\n", err)
+			os.Exit(1)
+		}
+		printJSON(specs)
 	case "rule-schema":
 		fmt.Print(schema.RuleJSON)
 	case "dry-run-policy":
@@ -315,6 +327,7 @@ Usage:
   gateway-harness validate-rule <rule.json>
   gateway-harness explain-rule <rule.json>
   gateway-harness compile-rule <rule.json>
+  gateway-harness compile-rule-stewards <rule.json>
   gateway-harness rule-schema
   gateway-harness dry-run-policy <policy.json> <hook> <request.json> [estimated_tokens]
   gateway-harness validate-adapter <adapter.capability.json>

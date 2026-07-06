@@ -1,0 +1,30 @@
+{
+  "version": "0.3",
+  "rules": [
+    {
+      "name": "newapi-compact-context-steward",
+      "tags": ["adapter:newapi", "domain:coding", "ai-in-loop:explicit"],
+      "trigger": {
+        "hooks": ["responses.compact.before_upstream"]
+      },
+      "scope": {
+        "models": ["*"]
+      },
+      "operation": {
+        "type": "ask_steward",
+        "steward_model": "kimi-for-coding",
+        "inputs": ["user_goal", "session_tags", "ledger_event_metadata", "artifact_refs", "redacted_trace"],
+        "allowed_actions": ["context.inject", "ledger.artifact.create", "diagnosis.note.create"],
+        "artifact_types": ["compact_summary"],
+        "required_guards": [
+          "explicit_invocation_only",
+          "structured_output_only",
+          "validate_output_actions",
+          "redacted_input_only",
+          "artifact_hash_required"
+        ],
+        "reason": "explicit compact-time AI steward contract; no AI is called by compilation"
+      }
+    }
+  ]
+}

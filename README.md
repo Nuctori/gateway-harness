@@ -22,9 +22,15 @@ It defines:
   project/session memory summary after compaction without hidden truncation, hidden budgets, or
   implicit AI calls.
 
-The default normalized rule layer exposes one operation today: `inject_capsule`. Ledger provenance is
-audit metadata for that injection, not a separate user-facing mental model. Destructive truncation is
-kept out of the normalized rule layer.
+The default normalized rule layer exposes two operations today:
+
+- `inject_capsule`: inject one explicit context capsule.
+- `ask_steward`: compile an explicit AI-in-the-loop steward spec. Compilation does not call AI or
+  mutate requests.
+
+Ledger provenance is audit metadata for injection, not a separate user-facing mental model. The
+normalized AI steward path is intentionally non-destructive: no `context.truncate`, no
+`policy.patch.propose`, and no fake gateway-side human-approval workflow.
 
 NewAPI is treated as an adapter example, not as the owner of the Gateway Harness concept.
 
@@ -58,6 +64,12 @@ Compile a normalized rule to the lower-level policy contract:
 
 ```bash
 gateway-harness compile-rule fixtures/newapi/context-rule.continuity-drop.json
+```
+
+Compile a normalized AI-in-the-loop rule to steward specs:
+
+```bash
+gateway-harness compile-rule-stewards fixtures/newapi/context-rule.ask-steward.json
 ```
 
 Print the rule schema:

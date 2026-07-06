@@ -51,3 +51,21 @@ func TestCompileRuleFixture(t *testing.T) {
 		t.Fatalf("compiled rule introduced non-normalized behavior: %s", encoded)
 	}
 }
+
+func TestCompileRuleStewardsFixture(t *testing.T) {
+	r := mustLoadRuleDocument("../../fixtures/newapi/context-rule.ask-steward.json")
+
+	specs, err := rule.CompileStewards(r)
+	if err != nil {
+		t.Fatalf("compile stewards: %v", err)
+	}
+	if len(specs) != 1 {
+		t.Fatalf("unexpected steward specs: %+v", specs)
+	}
+	if specs[0].Name != "newapi-compact-context-steward" {
+		t.Fatalf("unexpected steward name: %+v", specs[0])
+	}
+	if specs[0].StewardModel != "kimi-for-coding" {
+		t.Fatalf("unexpected steward model: %+v", specs[0])
+	}
+}

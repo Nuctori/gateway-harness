@@ -2,6 +2,7 @@ package rule
 
 import (
 	"encoding/json"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -65,14 +66,125 @@ func TestCompileAuditDisabledRuleToPlainInject(t *testing.T) {
 }
 
 func TestCompileRejectsUnknownOperation(t *testing.T) {
-	doc, err := Decode(strings.NewReader(strings.Replace(plainRuleJSON, `"inject_capsule"`, `"ask_steward"`, 1)))
+	doc, err := Decode(strings.NewReader(strings.Replace(plainRuleJSON, `"inject_capsule"`, `"not_a_real_operation"`, 1)))
 	if err != nil {
 		t.Fatalf("decode rule: %v", err)
 	}
 
 	_, err = Compile(doc)
-	if err == nil || !strings.Contains(err.Error(), `unsupported operation "ask_steward"`) {
+	if err == nil || !strings.Contains(err.Error(), `unsupported operation "not_a_real_operation"`) {
 		t.Fatalf("expected unsupported operation error, got %v", err)
+	}
+}
+
+func TestCompileAskStewardRuleToStewardSpec(t *testing.T) {
+	doc, err := Decode(strings.NewReader(askStewardRuleJSON))
+	if err != nil {
+		t.Fatalf("decode rule: %v", err)
+	}
+
+	specs, err := CompileStewards(doc)
+	if err != nil {
+		t.Fatalf("compile stewards: %v", err)
+	}
+	if len(specs) != 1 {
+		t.Fatalf("unexpected specs: %+v", specs)
+	}
+	spec := specs[0]
+	if spec.Name != "codex-compact-steward" || spec.StewardModel != "kimi-for-coding" {
+		t.Fatalf("unexpected steward identity: %+v", spec)
+	}
+	if len(spec.Hooks) != 1 || spec.Hooks[0] != "responses.compact.before_upstream" {
+		t.Fatalf("unexpected hooks: %+v", spec.Hooks)
+	}
+	if !slices.Contains(spec.RequiredGuards, "redacted_input_only") || !slices.Contains(spec.RequiredGuards, "explicit_invocation_only") {
+		t.Fatalf("missing transparency guards: %+v", spec.RequiredGuards)
+	}
+
+	encoded, err := json.Marshal(spec)
+	if err != nil {
+		t.Fatalf("marshal steward spec: %v", err)
+	}
+	if strings.Contains(string(encoded), "raw_prompt") || strings.Contains(string(encoded), "context.truncate") {
+		t.Fatalf("compiled steward introduced unsafe fields: %s", encoded)
+	}
+}
+
+func TestCompilePolicyRejectsAskStewardRule(t *testing.T) {
+	doc, err := Decode(strings.NewReader(askStewardRuleJSON))
+	if err != nil {
+		t.Fatalf("decode rule: %v", err)
+	}
+
+	_, err = Compile(doc)
+	if err == nil || !strings.Contains(err.Error(), "cannot compile to policy") {
+		t.Fatalf("expected policy compile rejection, got %v", err)
+	}
+}
+
+func TestAskStewardRejectsWildcardHook(t *testing.T) {
+	doc, err := Decode(strings.NewReader(strings.Replace(askStewardRuleJSON, `"responses.compact.before_upstream"`, `"*"`, 1)))
+	if err != nil {
+		t.Fatalf("decode rule: %v", err)
+	}
+
+	_, err = CompileStewards(doc)
+	if err == nil || !strings.Contains(err.Error(), "must not use wildcard hook for AI-in-the-loop") {
+		t.Fatalf("expected wildcard hook rejection, got %v", err)
+	}
+}
+
+func TestAskStewardRejectsMissingRedactedInputGuard(t *testing.T) {
+	doc, err := Decode(strings.NewReader(strings.Replace(askStewardRuleJSON, `"redacted_input_only",`, "", 1)))
+	if err != nil {
+		t.Fatalf("decode rule: %v", err)
+	}
+
+	_, err = CompileStewards(doc)
+	if err == nil || !strings.Contains(err.Error(), `requires guard "redacted_input_only"`) {
+		t.Fatalf("expected redacted input guard rejection, got %v", err)
+	}
+}
+
+func TestAskStewardRejectsPolicyPatchApprovalWorkflow(t *testing.T) {
+	raw := strings.Replace(
+		askStewardRuleJSON,
+		`"context.inject", "ledger.artifact.create", "diagnosis.note.create"`,
+		`"context.inject", "ledger.artifact.create", "policy.patch.propose"`,
+		1,
+	)
+	raw = strings.Replace(
+		raw,
+		`"artifact_hash_required"`,
+		`"artifact_hash_required", "human_approval_for_policy_patch"`,
+		1,
+	)
+	doc, err := Decode(strings.NewReader(raw))
+	if err != nil {
+		t.Fatalf("decode rule: %v", err)
+	}
+
+	_, err = CompileStewards(doc)
+	if err == nil || !strings.Contains(err.Error(), "policy.patch.propose") {
+		t.Fatalf("expected policy patch rejection, got %v", err)
+	}
+}
+
+func TestAskStewardRejectsTruncate(t *testing.T) {
+	raw := strings.Replace(
+		askStewardRuleJSON,
+		`"context.inject", "ledger.artifact.create", "diagnosis.note.create"`,
+		`"context.inject", "context.truncate", "ledger.artifact.create"`,
+		1,
+	)
+	doc, err := Decode(strings.NewReader(raw))
+	if err != nil {
+		t.Fatalf("decode rule: %v", err)
+	}
+
+	_, err = CompileStewards(doc)
+	if err == nil || !strings.Contains(err.Error(), "context.truncate") {
+		t.Fatalf("expected truncate rejection, got %v", err)
 	}
 }
 
@@ -120,6 +232,36 @@ const plainRuleJSON = `{
         "role": "system",
         "position": "after_existing_system",
         "text": "Preserve user intent."
+      }
+    }
+  ]
+}`
+
+const askStewardRuleJSON = `{
+  "version": "0.3",
+  "rules": [
+    {
+      "name": "compact-ai-steward",
+      "trigger": {
+        "hooks": ["responses.compact.before_upstream"]
+      },
+      "scope": {
+        "models": ["*"]
+      },
+      "operation": {
+        "type": "ask_steward",
+        "steward_name": "codex-compact-steward",
+        "steward_model": "kimi-for-coding",
+        "inputs": ["user_goal", "session_tags", "ledger_event_metadata", "artifact_refs", "redacted_trace"],
+		"allowed_actions": ["context.inject", "ledger.artifact.create", "diagnosis.note.create"],
+		"artifact_types": ["compact_summary"],
+		"required_guards": [
+		  "explicit_invocation_only",
+		  "structured_output_only",
+		  "validate_output_actions",
+		  "redacted_input_only",
+		  "artifact_hash_required"
+		]
       }
     }
   ]

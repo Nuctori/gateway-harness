@@ -67,9 +67,12 @@ v0.2 是一个可发布、可 CI 验收的契约版本：
 - NewAPI 示例 policy。
 - Release 产物：Linux amd64、Linux arm64、Linux armv7、Windows amd64。
 
-默认推荐的归一化 rule 只有一个 operation：
+默认推荐的归一化 rule 当前有两个 operation：
 
 - `inject_capsule`：注入一段显式上下文。填写 `audit.ledger_ref` 时，会编译成带 Ledger provenance 的注入。
+- `ask_steward`：声明一个显式 AI-in-the-loop steward 契约。它只编译出 steward spec，不会调用 AI，也不会改写请求。
+
+`ask_steward` 默认只允许非破坏性、可审计输出，例如 `context.inject`、`ledger.artifact.create`、`diagnosis.note.create` 和 `session.tags.update`。它不支持 `context.truncate`、`policy.patch.propose` 或“人工审批”伪能力；如果未来要做策略补丁审批，应作为独立上层工作流，而不是网关默认能力。
 
 底层 policy action 是编译目标和高级兼容层，不是默认 GUI 心智模型：
 
@@ -118,6 +121,12 @@ gateway-harness validate-rule fixtures/newapi/context-rule.continuity-drop.json
 
 ```bash
 gateway-harness compile-rule fixtures/newapi/context-rule.continuity-drop.json
+```
+
+把归一化 AI-in-loop rule 编译成 steward spec：
+
+```bash
+gateway-harness compile-rule-stewards fixtures/newapi/context-rule.ask-steward.json
 ```
 
 打印 rule schema：

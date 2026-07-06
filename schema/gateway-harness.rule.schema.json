@@ -46,7 +46,39 @@
           "$ref": "#/$defs/audit"
         }
       },
-      "required": ["name", "trigger", "scope", "operation"]
+      "required": ["name", "trigger", "scope", "operation"],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "properties": {
+                  "type": {
+                    "const": "ask_steward"
+                  }
+                },
+                "required": ["type"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "trigger": {
+                "properties": {
+                  "hooks": {
+                    "items": {
+                      "$ref": "#/$defs/stewardHook"
+                    }
+                  }
+                }
+              },
+              "audit": {
+                "maxProperties": 0
+              }
+            }
+          }
+        }
+      ]
     },
     "trigger": {
       "type": "object",
@@ -84,6 +116,16 @@
       "required": ["models"]
     },
     "operation": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/injectCapsuleOperation"
+        },
+        {
+          "$ref": "#/$defs/askStewardOperation"
+        }
+      ]
+    },
+    "injectCapsuleOperation": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -107,6 +149,58 @@
         }
       },
       "required": ["type", "role", "position", "text"]
+    },
+    "askStewardOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "ask_steward"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "steward_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "steward_model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/stewardInput"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "allowed_actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/stewardAction"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "artifact_types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifactType"
+          },
+          "uniqueItems": true
+        },
+        "required_guards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/stewardGuard"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": ["type", "steward_model", "inputs", "allowed_actions", "required_guards"]
     },
     "audit": {
       "type": "object",
@@ -141,6 +235,61 @@
         "responses.before_upstream",
         "responses.compact.before_model_mapping",
         "responses.compact.before_upstream"
+      ]
+    },
+    "stewardHook": {
+      "type": "string",
+      "enum": [
+        "context.continuity_drop.detected",
+        "request.before_model_mapping",
+        "request.before_upstream",
+        "chat.before_model_mapping",
+        "chat.before_upstream",
+        "responses.before_model_mapping",
+        "responses.before_upstream",
+        "responses.compact.before_model_mapping",
+        "responses.compact.before_upstream"
+      ]
+    },
+    "stewardInput": {
+      "type": "string",
+      "enum": [
+        "adapter_capability",
+        "artifact_refs",
+        "error_summary",
+        "ledger_event_metadata",
+        "policy_summary",
+        "redacted_trace",
+        "session_tags",
+        "user_goal"
+      ]
+    },
+    "stewardAction": {
+      "type": "string",
+      "enum": [
+        "context.inject",
+        "diagnosis.note.create",
+        "ledger.artifact.create",
+        "session.tags.update"
+      ]
+    },
+    "artifactType": {
+      "type": "string",
+      "enum": [
+        "compact_summary",
+        "trace",
+        "request_hash",
+        "response_hash"
+      ]
+    },
+    "stewardGuard": {
+      "type": "string",
+      "enum": [
+        "explicit_invocation_only",
+        "structured_output_only",
+        "validate_output_actions",
+        "redacted_input_only",
+        "artifact_hash_required"
       ]
     }
   }

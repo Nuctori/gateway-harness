@@ -82,6 +82,15 @@ contract for realistic adapter flows.
 - Adds the NewAPI continuity-drop normalized rule fixture and CI coverage that validates the
   compiled policy does not contain `context.truncate`, `budget`, or `ask_steward`.
 
+## v0.2.9 Scope
+
+- Adds normalized `ask_steward` rules that compile to explicit steward specs.
+- Keeps steward compilation non-executing: Gateway Harness does not call AI, mutate requests, or
+  read raw prompts.
+- Rejects `context.truncate`, `policy.patch.propose`, and `human_approval_for_policy_patch` in the
+  normalized steward path. The gateway does not pretend to own a human approval workflow.
+- Adds `compile-rule-stewards` and a NewAPI compact steward rule fixture.
+
 ## v0.1.x Scope
 
 - Policy structs and validation.

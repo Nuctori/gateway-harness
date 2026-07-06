@@ -33,6 +33,8 @@ jobs:
 
       - run: ./dist/gateway-harness validate-rule fixtures/newapi/context-rule.continuity-drop.json
 
+      - run: ./dist/gateway-harness validate-rule fixtures/newapi/context-rule.ask-steward.json
+
       - run: ./dist/gateway-harness explain-rule fixtures/newapi/context-rule.continuity-drop.json
 
       - run: ./dist/gateway-harness compile-rule fixtures/newapi/context-rule.continuity-drop.json > /tmp/gateway-harness.compiled-policy.json
@@ -40,6 +42,14 @@ jobs:
       - run: ./dist/gateway-harness validate /tmp/gateway-harness.compiled-policy.json
 
       - run: '! grep -E "context.truncate|budget|ask_steward" /tmp/gateway-harness.compiled-policy.json'
+
+      - run: ./dist/gateway-harness compile-rule-stewards fixtures/newapi/context-rule.ask-steward.json > /tmp/gateway-harness.compiled-stewards.json
+
+      - run: grep -F '"steward_model": "kimi-for-coding"' /tmp/gateway-harness.compiled-stewards.json
+
+      - run: grep -F '"redacted_input_only"' /tmp/gateway-harness.compiled-stewards.json
+
+      - run: '! grep -E "context.truncate|policy.patch.propose|human_approval_for_policy_patch" /tmp/gateway-harness.compiled-stewards.json'
 
       - run: ./dist/gateway-harness rule-schema > /tmp/gateway-harness.rule.schema.json
 
