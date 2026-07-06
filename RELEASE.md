@@ -34,6 +34,11 @@ contract for realistic adapter flows.
   validation. Compact smoke is opt-in because it may consume upstream quota.
 - The script does not discover tokens from the NewAPI database and does not print token values.
 
+## v0.2.3 Scope
+
+- Keeps live-smoke failure response bodies suppressed by default.
+- Adds `PRINT_ERROR_BODY=1` as an explicit debugging opt-in for upstream error details.
+
 ## v0.1.x Scope
 
 - Policy structs and validation.

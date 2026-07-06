@@ -40,6 +40,8 @@ NEWAPI_API_KEY=sk-... COMPACT_SMOKE=1 sh examples/newapi/online-acceptance.sh
 
 The script never discovers tokens from the database and never prints the token. Use
 `NEWAPI_API_KEY_FILE=/path/to/token` if you prefer not to put the token in shell history.
+Failed live-smoke response bodies are suppressed by default; set `PRINT_ERROR_BODY=1` only when you
+explicitly want upstream error details for debugging.
 
 NewAPI adapter responsibilities:
 

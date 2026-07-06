@@ -13,6 +13,7 @@ SMOKE_MODEL="${SMOKE_MODEL:-gpt-5.4-mini}"
 COMPACT_SMOKE_MODEL="${COMPACT_SMOKE_MODEL:-$SMOKE_MODEL}"
 NEWAPI_API_KEY="${NEWAPI_API_KEY:-}"
 NEWAPI_API_KEY_FILE="${NEWAPI_API_KEY_FILE:-}"
+PRINT_ERROR_BODY="${PRINT_ERROR_BODY:-0}"
 
 need() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -27,6 +28,15 @@ pass() {
 
 warn() {
   echo "warn: $1" >&2
+}
+
+maybe_print_error_body() {
+  file="$1"
+  if [ "$PRINT_ERROR_BODY" = "1" ]; then
+    cat "$file" >&2
+  else
+    warn "response body suppressed; set PRINT_ERROR_BODY=1 to print it"
+  fi
 }
 
 need curl
@@ -138,7 +148,7 @@ if [ "$LIVE_SMOKE" = "1" ] || [ -n "$NEWAPI_API_KEY" ]; then
     "$NEWAPI_BASE/v1/responses")"
   if [ "$smoke_status" -lt 200 ] || [ "$smoke_status" -ge 300 ]; then
     echo "responses smoke failed with HTTP $smoke_status" >&2
-    cat "$smoke_file" >&2
+    maybe_print_error_body "$smoke_file"
     rm -f "$smoke_file"
     exit 1
   fi
@@ -171,7 +181,7 @@ if [ "$COMPACT_SMOKE" = "1" ]; then
     "$NEWAPI_BASE/v1/responses/compact")"
   if [ "$compact_status" -lt 200 ] || [ "$compact_status" -ge 300 ]; then
     echo "responses compact smoke failed with HTTP $compact_status" >&2
-    cat "$compact_file" >&2
+    maybe_print_error_body "$compact_file"
     rm -f "$compact_file"
     exit 1
   fi
