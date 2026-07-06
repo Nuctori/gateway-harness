@@ -41,7 +41,11 @@ jobs:
 
       - run: ./dist/gateway-harness validate /tmp/gateway-harness.compiled-policy.json
 
-      - run: '! grep -E "context.truncate|budget|ask_steward" /tmp/gateway-harness.compiled-policy.json'
+      - run: |
+          if grep -E "context.truncate|budget|ask_steward" /tmp/gateway-harness.compiled-policy.json; then
+            echo "compiled policy contains forbidden normalized-rule token"
+            exit 1
+          fi
 
       - run: ./dist/gateway-harness compile-rule-stewards fixtures/newapi/context-rule.ask-steward.json > /tmp/gateway-harness.compiled-stewards.json
 
@@ -49,7 +53,11 @@ jobs:
 
       - run: grep -F '"redacted_input_only"' /tmp/gateway-harness.compiled-stewards.json
 
-      - run: '! grep -E "context.truncate|policy.patch.propose|human_approval_for_policy_patch" /tmp/gateway-harness.compiled-stewards.json'
+      - run: |
+          if grep -E "context.truncate|policy.patch.propose|human_approval_for_policy_patch" /tmp/gateway-harness.compiled-stewards.json; then
+            echo "compiled steward contains forbidden workflow token"
+            exit 1
+          fi
 
       - run: ./dist/gateway-harness rule-schema > /tmp/gateway-harness.rule.schema.json
 
