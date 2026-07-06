@@ -205,6 +205,14 @@ gateway-harness steward-proposal-schema
 gateway-harness dry-run-steward-proposal fixtures/newapi/compact-context.steward.json fixtures/newapi/compact-context.steward-proposal.json fixtures/newapi/compact-context.request.json
 ```
 
+在没有真实 NewAPI 主机和 API key 的 CI 环境里跑 NewAPI 在线验收脚本的 mock 测试：
+
+```bash
+sh examples/newapi/online-acceptance.test.sh
+```
+
+这个测试会创建临时 SQLite 配置库和假的 `curl` / `docker` / `gateway-harness` 命令，覆盖默认无 token 路径、live smoke、compact smoke、端口检查、脱敏 trace 检查、failover 配置校验，以及失败响应体默认不打印。
+
 Conformance fixture 验证的是 Gateway Harness 契约、adapter capability 和真实请求形态。`replay-conformance` 会把 fixture request 通过 HTTP POST 发到本地 fake upstream，不触网、不调用真实模型；它仍不替代 live upstream 端到端测试。
 
 `replay-policy-conformance` 会更进一步：先把 policy 应用到请求副本，再把改写后的请求发到本地 fake upstream，只输出请求大小和脱敏 trace。它适合放进 CI，用来证明 adapter 风格的真实改写没有破坏协议形态，也没有把原始 prompt 或原始注入文本写进日志输出。

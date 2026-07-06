@@ -39,6 +39,13 @@ contract for realistic adapter flows.
 - Keeps live-smoke failure response bodies suppressed by default.
 - Adds `PRINT_ERROR_BODY=1` as an explicit debugging opt-in for upstream error details.
 
+## v0.2.4 Scope
+
+- Adds a mock CI acceptance test for `examples/newapi/online-acceptance.sh`.
+- The mock test covers the no-token path, opt-in live `/v1/responses` smoke, opt-in compact smoke,
+  Docker port checks, redacted trace checks, failover option validation, and default failure-body
+  suppression without requiring a live NewAPI host or real API token.
+
 ## v0.1.x Scope
 
 - Policy structs and validation.

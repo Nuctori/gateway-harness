@@ -43,6 +43,17 @@ The script never discovers tokens from the database and never prints the token. 
 Failed live-smoke response bodies are suppressed by default; set `PRINT_ERROR_BODY=1` only when you
 explicitly want upstream error details for debugging.
 
+CI can exercise the acceptance script without a live NewAPI host by running:
+
+```bash
+sh examples/newapi/online-acceptance.test.sh
+```
+
+The mock test creates a temporary SQLite options database and fake `curl`, `docker`, and
+`gateway-harness` commands. It covers the default no-token path, live `/v1/responses` smoke,
+compact smoke, Docker port checks, redacted trace checks, failover option validation, and the
+default suppression of failed upstream response bodies.
+
 NewAPI adapter responsibilities:
 
 - Map NewAPI relay phases to Gateway Harness hooks.
