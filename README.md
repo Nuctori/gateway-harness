@@ -216,4 +216,4 @@ The main project should publish:
 Gateway-specific builds, patches, and images belong in adapter repositories such as
 `newapi-gateway-harness-example`.
 
-See [RELEASE.md](RELEASE.md) for the v0.1 release boundary.
+See [RELEASE.md](RELEASE.md) for the v0.2 release boundary.
