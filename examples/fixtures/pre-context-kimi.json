@@ -1,0 +1,24 @@
+{
+  "type": "request.pre_context",
+  "trace_id": "trace_context_kimi",
+  "request_id": "req_context_kimi",
+  "model": "kimi-for-coding",
+  "tags": ["domain:coding"],
+  "context": {
+    "max_tokens": 128000,
+    "estimated_tokens": 28000,
+    "token_estimator": "char_approx_v1",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are a helpful assistant.",
+        "estimated_tokens": 7
+      },
+      {
+        "role": "user",
+        "content": "Long context that should trigger truncation.",
+        "estimated_tokens": 27993
+      }
+    ]
+  }
+}

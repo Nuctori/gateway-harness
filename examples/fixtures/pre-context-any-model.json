@@ -1,0 +1,24 @@
+{
+  "type": "request.pre_context",
+  "trace_id": "trace_context_gpt",
+  "request_id": "req_context_gpt",
+  "model": "gpt-5.4",
+  "tags": ["domain:coding"],
+  "context": {
+    "max_tokens": 128000,
+    "estimated_tokens": 8200,
+    "token_estimator": "char_approx_v1",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are a helpful assistant.",
+        "estimated_tokens": 7
+      },
+      {
+        "role": "user",
+        "content": "Help me review this patch.",
+        "estimated_tokens": 7
+      }
+    ]
+  }
+}

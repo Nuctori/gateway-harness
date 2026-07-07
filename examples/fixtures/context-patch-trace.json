@@ -1,0 +1,35 @@
+{
+  "trace_id": "trace_context_gpt",
+  "request_id": "req_context_gpt",
+  "events": [
+    {
+      "type": "request.pre_context",
+      "model": "gpt-5.4",
+      "timestamp": "2026-07-05T00:00:00Z"
+    }
+  ],
+  "decisions": [
+    {
+      "policy": "any-model-context-harness",
+      "action": "context.patch",
+      "matched_program": "any-model-context-harness",
+      "conditions": [
+        {
+          "expr": "model_matches:*",
+          "result": true
+        }
+      ],
+      "patch_summary": {
+        "ops": 1,
+        "added_estimated_tokens": 21,
+        "removed_estimated_tokens": 0,
+        "content_mode": "redacted"
+      }
+    }
+  ],
+  "outcomes": [
+    {
+      "type": "context.patch_applied"
+    }
+  ]
+}

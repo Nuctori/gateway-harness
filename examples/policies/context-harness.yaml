@@ -1,0 +1,38 @@
+name: any-model-context-harness
+scope:
+  models:
+    - "*"
+  tags:
+    - domain:coding
+
+hooks:
+  request.pre_context:
+    - program:
+        budget:
+          max_eval_ms: 20
+          max_patch_ops: 16
+          max_added_tokens: 1200
+          max_trace_metadata_kb: 32
+        steps:
+          - when:
+              model_matches: "*"
+            do:
+              - action: context.inject
+                role: system
+                position: after_existing_system
+                reason: preserve architecture decisions
+                text: |
+                  You are operating inside Gateway Harness.
+                  Preserve user intent and prior architecture decisions.
+
+          - when:
+              estimated_tokens_gt: 24000
+            do:
+              - action: context.truncate
+                strategy: oldest_user_assistant_pairs
+                keep_last_messages: 12
+                preserve_roles:
+                  - system
+                  - developer
+                max_estimated_tokens: 24000
+                reason: keep request inside local context budget

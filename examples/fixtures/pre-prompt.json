@@ -1,0 +1,7 @@
+{
+  "type": "request.pre_prompt",
+  "trace_id": "trace_prompt",
+  "request_id": "req_prompt",
+  "model": "gpt-5.4",
+  "tags": ["domain:coding"]
+}

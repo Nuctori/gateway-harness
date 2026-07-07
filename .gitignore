@@ -1,0 +1,6 @@
+dist/
+*.exe
+*.test
+harness-e2e*
+coverage.out
+.DS_Store

@@ -1,0 +1,32 @@
+name: coding-model-policy
+scope:
+  models:
+    - gpt-5.4
+    - gpt-5.5
+    - kimi-for-coding
+    - glm5.2
+    - gpt-5.4-mini
+    - deepseek-v4-flash
+  tags:
+    - domain:coding
+
+hooks:
+  request.pre_prompt:
+    - action: prompt.append_system
+      text: |
+        You are optimized for coding tasks.
+
+  upstream.error:
+    - if:
+        status_in: [429, 500, 502, 503, 504]
+        message_contains:
+          - Too Many Requests
+          - exceeded retry limit
+      action: fallback.sequence
+      models:
+        - gpt-5.4
+        - gpt-5.5
+        - kimi-for-coding
+        - glm5.2
+        - gpt-5.4-mini
+        - deepseek-v4-flash
