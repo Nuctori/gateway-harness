@@ -9,9 +9,10 @@ import (
 )
 
 type Capability struct {
-	Events   []string
-	Actions  []string
-	Outcomes []string
+	SourceHooks []string
+	Events      []string
+	Actions     []string
+	Outcomes    []string
 }
 
 type AdapterInput struct {

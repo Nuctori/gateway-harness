@@ -36,3 +36,9 @@ $env:GOOS='linux'; $env:GOARCH='arm'; $env:GOARM='7'; $env:CGO_ENABLED='0'; go b
 Core produces deterministic decisions and patches. Adapters apply them.
 
 The core does not call model providers, does not read gateway databases, does not execute arbitrary scripts, and does not persist raw prompts by default.
+
+## Hook Adapters
+
+Codex and OpenCode need thin ingress adapters because their hook names differ.
+The core still only consumes normalized events.
+See [docs/hook-adapters.md](docs/hook-adapters.md) for the mapping table.

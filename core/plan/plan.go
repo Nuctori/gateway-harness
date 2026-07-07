@@ -45,10 +45,10 @@ type PatchSummary struct {
 
 func (op PatchOperation) Redacted() PatchOperation {
 	return PatchOperation{
-		Op:       op.Op,
-		Target:   op.Target,
-		Role:     op.Role,
-		Position: op.Position,
+		Op:                 op.Op,
+		Target:             op.Target,
+		Role:               op.Role,
+		Position:           op.Position,
 		ContentHash:        op.ContentHash,
 		Strategy:           op.Strategy,
 		KeepLastMessages:   op.KeepLastMessages,

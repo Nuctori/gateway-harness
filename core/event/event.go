@@ -3,9 +3,9 @@ package event
 type Type string
 
 const (
-	TypeRequestPrePrompt      Type = "request.pre_prompt"
-	TypeUpstreamError         Type = "upstream.error"
-	TypeRequestPreContext     Type = "request.pre_context"
+	TypeRequestPrePrompt  Type = "request.pre_prompt"
+	TypeUpstreamError     Type = "upstream.error"
+	TypeRequestPreContext Type = "request.pre_context"
 )
 
 type Event struct {
@@ -48,7 +48,6 @@ type Message struct {
 	EstimatedTokens int64             `json:"estimated_tokens,omitempty" yaml:"estimated_tokens,omitempty"`
 	Metadata        map[string]string `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 }
-
 
 func (e Event) HasTag(tag string) bool {
 	for _, existing := range e.Tags {
